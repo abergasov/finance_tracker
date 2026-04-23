@@ -2,8 +2,8 @@ package sampler
 
 import (
 	"context"
-	"go_project_template/internal/logger"
-	"go_project_template/internal/repository"
+	"finance_tracker/internal/logger"
+	"finance_tracker/internal/repository"
 )
 
 type Service struct {

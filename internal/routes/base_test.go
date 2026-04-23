@@ -1,7 +1,7 @@
 package routes_test
 
 import (
-	testhelpers "go_project_template/internal/test_helpers"
+	testhelpers "finance_tracker/internal/test_helpers"
 	"testing"
 )
 

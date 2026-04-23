@@ -3,8 +3,8 @@ package utils_test
 import (
 	"context"
 	"encoding/json"
+	"finance_tracker/internal/utils"
 	"fmt"
-	"go_project_template/internal/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"

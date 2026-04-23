@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"go_project_template/internal/utils"
+	"finance_tracker/internal/utils"
 	"io"
 	"log/slog"
 	"os"

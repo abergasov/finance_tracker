@@ -3,9 +3,9 @@ package database
 import (
 	"context"
 	"errors"
+	"finance_tracker/internal/config"
+	"finance_tracker/internal/logger"
 	"fmt"
-	"go_project_template/internal/config"
-	"go_project_template/internal/logger"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"

@@ -2,8 +2,8 @@ package logger_test
 
 import (
 	"bytes"
+	"finance_tracker/internal/logger"
 	"fmt"
-	"go_project_template/internal/logger"
 	"io"
 	"os"
 	"sync"

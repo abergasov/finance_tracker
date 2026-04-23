@@ -2,8 +2,8 @@ package utils_test
 
 import (
 	"context"
+	"finance_tracker/internal/utils"
 	"fmt"
-	"go_project_template/internal/utils"
 	"sync/atomic"
 	"testing"
 	"time"

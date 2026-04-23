@@ -3,9 +3,9 @@ package testhelpers
 import (
 	"bytes"
 	"encoding/json"
+	"finance_tracker/internal/logger"
+	"finance_tracker/internal/routes"
 	"fmt"
-	"go_project_template/internal/logger"
-	"go_project_template/internal/routes"
 	"net"
 	"net/http"
 	"testing"

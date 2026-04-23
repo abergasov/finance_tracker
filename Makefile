@@ -1,4 +1,4 @@
-PROJECT_NAME:=sampler
+PROJECT_NAME:=finance_tracker
 FILE_HASH := $(shell git rev-parse HEAD)
 GOLANGCI_LINT := $(shell command -v golangci-lint 2> /dev/null)
 
@@ -7,15 +7,6 @@ COVERAGE_THRESHOLD:=30
 COVERAGE_TOTAL := $(shell go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+')
 COVERAGE_PASS_THRESHOLD := $(shell echo "$(COVERAGE_TOTAL) $(COVERAGE_THRESHOLD)" | awk '{print ($$1 >= $$2)}')
 
-init_repo: ## create necessary configs
-	cp configs/sample.common.env configs/common.env
-	cp configs/sample.app_conf.yml configs/app_conf.yml
-	cp configs/sample.app_conf_docker.yml configs/app_conf_docker.yml
-	find . -type f -name "*.go" -exec sed -i 's/go_project_template/${PROJECT_NAME}/g' {} +
-	find . -type f -name "*.mod" -exec sed -i 's/go_project_template/${PROJECT_NAME}/g' {} +
-	go mod tidy && go mod download
-	go install golang.org/x/tools/cmd/goimports@latest
-	goimports -local github.com/$(PROJECT_NAME) -w .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
