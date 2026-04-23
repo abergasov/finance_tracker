@@ -4,9 +4,9 @@ import (
 	"finance_tracker/internal/logger"
 	"finance_tracker/internal/service/sampler"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/adaptor"
+	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -42,7 +42,7 @@ func InitAppRouter(log logger.AppLogger, service *sampler.Service, address strin
 }
 
 func (s *Server) initRoutes() {
-	s.httpEngine.Get("/", func(ctx *fiber.Ctx) error {
+	s.httpEngine.Get("/", func(ctx fiber.Ctx) error {
 		return ctx.SendString("pong")
 	})
 }
