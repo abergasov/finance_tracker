@@ -40,7 +40,7 @@ func TestGenerateInsertSQL(t *testing.T) {
 }
 
 func TestGenerateBulkInsertSQL(t *testing.T) {
-	res, params := utils.GenerateBulkInsertSQL[Fruit]("sample", utils.PQParamPlaceholder, []Fruit{
+	res, params := utils.GenerateBulkInsertSQL[Fruit]("sample", []Fruit{
 		{"Apple", 10},
 		{"Pear", 100},
 		{"Cherry", 36},
