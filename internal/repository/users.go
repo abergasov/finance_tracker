@@ -29,7 +29,7 @@ func (r *Repo) SaveUserByEmail(ctx context.Context, email, name string) (*entiti
 		"u_id":       uuid.New(),
 		"created_at": time.Now(),
 		"updated_at": time.Now(),
-		"email":      email,
+		"email":      strings.TrimSpace(strings.ToLower(email)),
 		"user_name":  name,
 	})
 	q += " ON CONFLICT DO NOTHING"
