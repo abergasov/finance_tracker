@@ -2,9 +2,14 @@ package testhelpers
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
+	"finance_tracker/internal/entities"
 	"finance_tracker/internal/logger"
 	"finance_tracker/internal/routes"
+	"finance_tracker/internal/test_helpers/seed"
 	"fmt"
 	"net"
 	"net/http"
@@ -15,16 +20,27 @@ import (
 )
 
 type TestServer struct {
-	appPort  int
-	client   http.Client
-	authUser string
+	t         *testing.T
+	appPort   int
+	client    http.Client
+	authToken string
+	container *TestContainer
+}
+
+func NewTestServerWithUser(t *testing.T, container *TestContainer) *TestServer {
+	user := seed.NewUserBuilder().PopulateTest(t, container.Repo)
+	srv := NewTestServer(t, container)
+	srv.AuthUser(user.Email)
+	return srv
 }
 
 func NewTestServer(t *testing.T, container *TestContainer) *TestServer {
 	appPort := GetFreePort(t)
 	srv := &TestServer{
-		appPort: appPort,
-		client:  *http.DefaultClient,
+		t:         t,
+		appPort:   appPort,
+		client:    *http.DefaultClient,
+		container: container,
 	}
 
 	appLog := logger.NewAppSLogger()
@@ -38,7 +54,20 @@ func NewTestServer(t *testing.T, container *TestContainer) *TestServer {
 }
 
 func (ts *TestServer) AuthUser(mail string) {
-	ts.authUser = mail
+	usr, err := ts.container.Repo.GetUserByEmail(ts.container.Ctx, mail)
+	require.NoError(ts.t, err, "get user by email")
+	require.NotNil(ts.t, usr, "get user by email")
+	ts.authToken = signToken(ts.t, ts.container.Cfg.Auth.Token.SigningKey, &entities.SignedTokenClaims{
+		Kind:   "auth",
+		Exp:    time.Now().Add(time.Hour).Unix(),
+		UserID: usr.ID.String(),
+		Email:  usr.Email,
+		Name:   usr.Name,
+	})
+}
+
+func (ts *TestServer) ResetUser() {
+	ts.authToken = ""
 }
 
 func (ts *TestServer) DisableRedirects() {
@@ -113,8 +142,8 @@ func (ts *TestServer) Request(t *testing.T, method, path string, body interface{
 			})
 		}
 	}
-	if ts.authUser != "" {
-		req.Header.Add("Authorization", fmt.Sprint("Bearer ", ts.CreateToken(t, ts.authUser)))
+	if ts.authToken != "" {
+		req.Header.Add("Authorization", fmt.Sprint("Bearer ", ts.authToken))
 	}
 
 	res, err := ts.client.Do(req)
@@ -123,10 +152,6 @@ func (ts *TestServer) Request(t *testing.T, method, path string, body interface{
 		require.NoError(t, res.Body.Close())
 	})
 	return &TestResponse{Res: res}
-}
-
-func (ts *TestServer) CreateToken(_ *testing.T, _ string) string {
-	return "test_token"
 }
 
 func (ts *TestServer) waitForReady(t testing.TB) {
@@ -139,4 +164,19 @@ func (ts *TestServer) waitForReady(t testing.TB) {
 		}
 		return false
 	}, 5*time.Second, 10*time.Millisecond, "failed to start test HTTP server")
+}
+
+func signToken(t *testing.T, signingKey string, claims *entities.SignedTokenClaims) string {
+	t.Helper()
+
+	payload, err := json.Marshal(claims)
+	require.NoError(t, err)
+
+	encodedPayload := base64.RawURLEncoding.EncodeToString(payload)
+	mac := hmac.New(sha256.New, []byte(signingKey))
+	_, err = mac.Write([]byte(encodedPayload))
+	require.NoError(t, err)
+
+	signature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	return encodedPayload + "." + signature
 }

@@ -2,11 +2,13 @@ package routes
 
 import (
 	"errors"
+	"finance_tracker/internal/utils"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 const GoogleOAuthStateCookie = "google_oauth_state"
@@ -57,7 +59,7 @@ func bearerToken(header string) (string, bool) {
 	return token, token != ""
 }
 
-func (s *Router) handleCurrentUser(ctx fiber.Ctx) error {
+func (s *Router) handleCurrentUser(ctx fiber.Ctx, _ uuid.UUID) error {
 	token, ok := bearerToken(ctx.Get("Authorization"))
 	if !ok {
 		return ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "missing token"})
@@ -65,7 +67,12 @@ func (s *Router) handleCurrentUser(ctx fiber.Ctx) error {
 
 	user, err := s.service.ServeHomePage(ctx.Context(), token)
 	if err != nil {
-		return ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
+		// Only token validation failures are auth errors; repo/tree failures
+		// indicate a server-side problem and must not be masked as 401.
+		if errors.Is(err, utils.ErrInvalidToken) {
+			return ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
+		}
+		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
 	return ctx.JSON(user)
 }

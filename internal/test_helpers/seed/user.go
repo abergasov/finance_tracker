@@ -3,7 +3,7 @@ package seed
 import (
 	"context"
 	"finance_tracker/internal/entities"
-	testhelpers "finance_tracker/internal/test_helpers"
+	"finance_tracker/internal/repository"
 	"testing"
 	"time"
 
@@ -28,13 +28,13 @@ func (d *UserBuilder) Build() *entities.User {
 	return d.user
 }
 
-func (d *UserBuilder) PopulateTest(t testing.TB, container *testhelpers.TestContainer) *entities.User {
+func (d *UserBuilder) PopulateTest(t testing.TB, repo *repository.Repo) *entities.User {
 	t.Helper()
-	ctx, cancel := context.WithTimeout(container.Ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	usr := d.Build()
-	dbUsr, err := container.Repo.SaveUserByEmail(ctx, usr.Email, usr.Name)
+	dbUsr, err := repo.SaveUserByEmail(ctx, usr.Email, usr.Name)
 	require.NoError(t, err)
 	return dbUsr
 }

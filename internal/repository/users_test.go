@@ -14,7 +14,7 @@ func TestSaveUserByEmailHandlesDuplicateEmailCaseInsensitively(t *testing.T) {
 	container := testhelpers.GetClean(t)
 
 	// when
-	usr := seed.NewUserBuilder().PopulateTest(t, container)
+	usr := seed.NewUserBuilder().PopulateTest(t, container.Repo)
 
 	// then
 	dbUser, err := container.Repo.GetUserByEmail(container.Ctx, usr.Email)
