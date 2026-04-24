@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -24,6 +25,7 @@ type AppConfig struct {
 	AppPort         int      `yaml:"app_port"`
 	EnableTelemetry bool     `yaml:"enable_telemetry"`
 	MigratesFolder  string   `yaml:"migrates_folder"`
+	ExchangeToken   string   `yaml:"exchange_token"`
 	ConfigDB        DBConf   `yaml:"conf_db"`
 	Auth            AuthConf `yaml:"auth"`
 }
@@ -70,10 +72,17 @@ func InitConf(confFile string) (*AppConfig, error) {
 	if err = yaml.NewDecoder(file).Decode(&cfg); err != nil {
 		return nil, fmt.Errorf("error decode config file: %w", err)
 	}
-	if err = cfg.Auth.Validate(); err != nil {
+	if err = cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("error validate config file: %w", err)
 	}
 	return &cfg, nil
+}
+
+func (cfg *AppConfig) Validate() error {
+	if cfg.ExchangeToken == "" {
+		return errors.New("missing exchange token")
+	}
+	return cfg.Auth.Validate()
 }
 
 func (cfg *AuthConf) Validate() error {

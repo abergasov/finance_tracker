@@ -8,6 +8,7 @@ type Repo struct {
 
 var AllTables = []string{
 	TableUsers,
+	TableCurrencies,
 }
 
 func InitRepo(db database.DBConnector) *Repo {

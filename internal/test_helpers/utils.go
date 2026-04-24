@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"net"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,4 +20,11 @@ func GetFreePort(t *testing.T) int {
 		require.NoError(t, l.Close())
 	}()
 	return l.Addr().(*net.TCPAddr).Port
+}
+
+func SkipCIRun(t *testing.T) {
+	t.Helper()
+	if os.Getenv("CI_RUN") != "" {
+		t.Skip("Skipping CI integration tests.")
+	}
 }
