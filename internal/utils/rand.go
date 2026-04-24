@@ -3,14 +3,12 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
-	"time"
 )
 
 func RandomBase64(size int) string {
 	randomBytes := make([]byte, size)
 	if _, err := rand.Read(randomBytes); err != nil {
-		return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%d", time.Now().UnixNano())))
+		panic("crypto/rand.Read failed: " + err.Error())
 	}
 	return base64.RawURLEncoding.EncodeToString(randomBytes)
 }
