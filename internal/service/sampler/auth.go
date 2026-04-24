@@ -67,7 +67,7 @@ func (s *Service) CompleteGoogleAuth(ctx context.Context, code string) (*entitie
 
 	sessionToken, err := utils.SignClaims(&entities.SignedTokenClaims{
 		Kind:   utils.AuthTokenKind,
-		Exp:    time.Now().Add(s.cfg.Auth.Token.ExpirationMinutes * time.Minute).Unix(),
+		Exp:    time.Now().Add(s.cfg.Auth.Token.ExpirationMinutes).Unix(),
 		UserID: user.ID.String(),
 		Email:  user.Email,
 		Name:   user.Name,
