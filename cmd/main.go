@@ -6,7 +6,7 @@ import (
 	"finance_tracker/internal/logger"
 	"finance_tracker/internal/repository"
 	"finance_tracker/internal/routes"
-	samplerService "finance_tracker/internal/service/sampler"
+	"finance_tracker/internal/service/user"
 	"finance_tracker/internal/storage/database"
 	"flag"
 	"fmt"
@@ -45,7 +45,7 @@ func main() {
 	repo := repository.InitRepo(dbConn)
 
 	appLog.Info("init services")
-	service := samplerService.InitService(ctx, appLog, repo, appConf)
+	service := user.InitService(ctx, appLog, repo, appConf)
 
 	appLog.Info("init http service")
 	appHTTPServer := routes.InitAppRouter(appLog, service, fmt.Sprintf(":%d", appConf.AppPort), true)

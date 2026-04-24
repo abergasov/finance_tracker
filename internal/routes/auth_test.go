@@ -15,6 +15,7 @@ import (
 	"finance_tracker/internal/routes"
 	testhelpers "finance_tracker/internal/test_helpers"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -64,10 +65,11 @@ func TestCurrentUserAuthChecks(t *testing.T) {
 	container := testhelpers.GetClean(t)
 	srv := testhelpers.NewTestServer(t, container)
 
+	uID := uuid.NewString()
 	validToken := signToken(t, container.Cfg.Auth.Token.SigningKey, &entities.SignedTokenClaims{
 		Kind:   "auth",
 		Exp:    time.Now().Add(time.Hour).Unix(),
-		UserID: "user-1",
+		UserID: uID,
 		Email:  "person@example.com",
 		Locale: "en",
 		Name:   "Person Example",
@@ -92,16 +94,12 @@ func TestCurrentUserAuthChecks(t *testing.T) {
 	})
 
 	t.Run("valid token", func(t *testing.T) {
-		var payload struct {
-			User entities.AuthUser `json:"user"`
-		}
+		var payload entities.HomePage
 		srv.GetWithHeader(t, "/api/auth/me", withBearer(validToken)).RequireOk(t).RequireUnmarshal(t, &payload)
 
-		require.Equal(t, entities.AuthUser{
-			ID:    "user-1",
-			Email: "person@example.com",
-			Name:  "Person Example",
-		}, payload.User)
+		require.Equal(t, "person@example.com", payload.User.Email)
+		require.Equal(t, "Person Example", payload.User.Name)
+		require.Equal(t, uID, payload.User.ID)
 	})
 }
 
@@ -110,10 +108,11 @@ func TestCurrentUserCORSAllowsConfiguredUIOrigin(t *testing.T) {
 	container := testhelpers.GetClean(t)
 	srv := testhelpers.NewTestServer(t, container)
 
+	uID := uuid.NewString()
 	validToken := signToken(t, container.Cfg.Auth.Token.SigningKey, &entities.SignedTokenClaims{
 		Kind:   "auth",
 		Exp:    time.Now().Add(time.Hour).Unix(),
-		UserID: "user-1",
+		UserID: uID,
 		Email:  "person@example.com",
 	})
 

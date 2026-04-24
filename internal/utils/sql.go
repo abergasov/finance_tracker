@@ -2,11 +2,19 @@ package utils
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
 	"github.com/georgysavva/scany/v2/sqlscan"
 )
+
+// Querier is the common interface to execute queries on a DB, Tx, or Conn.
+type Querier interface {
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+}
 
 func GenerateInsertSQL(tableName string, fieldsValuesMapping map[string]any) (sqlI string, params []any) {
 	fields := make([]string, 0, len(fieldsValuesMapping))
@@ -83,4 +91,30 @@ func QueryRowToStruct[T any](ctx context.Context, conn sqlscan.Querier, query st
 		return nil, fmt.Errorf("failed to get row: %w", err)
 	}
 	return &t, nil
+}
+
+func QueryRowsPrimitive[T any](ctx context.Context, conn sqlscan.Querier, query string, params ...any) ([]T, error) {
+	rows, err := conn.QueryContext(ctx, query, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close() //nolint:errcheck // it's ok
+	result := make([]T, 0, 1_000)
+	for rows.Next() {
+		var data T
+		if errS := rows.Scan(&data); errS != nil {
+			return nil, errS
+		}
+		result = append(result, data)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func QueryRowPrimitive[T any](ctx context.Context, conn Querier, query string, params ...any) (T, error) {
+	var t T
+	err := conn.QueryRowContext(ctx, query, params...).Scan(&t)
+	return t, err
 }

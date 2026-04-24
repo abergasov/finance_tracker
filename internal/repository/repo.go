@@ -7,6 +7,7 @@ type Repo struct {
 }
 
 var AllTables = []string{
+	TableCategoryExpenses,
 	TableUsers,
 	TableCurrencies,
 }

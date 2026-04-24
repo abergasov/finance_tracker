@@ -2,7 +2,7 @@ package routes
 
 import (
 	"finance_tracker/internal/logger"
-	"finance_tracker/internal/service/sampler"
+	"finance_tracker/internal/service/user"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/adaptor"
@@ -16,12 +16,12 @@ import (
 type Router struct {
 	appAddr    string
 	log        logger.AppLogger
-	service    *sampler.Service
+	service    *user.Service
 	httpEngine *fiber.App
 }
 
 // InitAppRouter initializes the HTTP Server.
-func InitAppRouter(log logger.AppLogger, service *sampler.Service, address string, enableTelemetry bool) *Router {
+func InitAppRouter(log logger.AppLogger, service *user.Service, address string, enableTelemetry bool) *Router {
 	app := &Router{
 		appAddr:    address,
 		httpEngine: fiber.New(fiber.Config{}),
@@ -61,7 +61,7 @@ func (s *Router) initRoutes() {
 // Run starts the HTTP Server.
 func (s *Router) Run() error {
 	s.log.Info("Starting HTTP server", logger.WithString("port", s.appAddr))
-	return s.httpEngine.Listen(s.appAddr)
+	return s.httpEngine.Listen(s.appAddr, fiber.ListenConfig{DisableStartupMessage: true})
 }
 
 func (s *Router) Stop() error {

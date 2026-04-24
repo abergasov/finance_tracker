@@ -7,7 +7,7 @@ import (
 	"finance_tracker/internal/logger"
 	"finance_tracker/internal/repository"
 	"finance_tracker/internal/service/currency"
-	samplerService "finance_tracker/internal/service/sampler"
+	"finance_tracker/internal/service/user"
 	"finance_tracker/internal/storage/database"
 	"fmt"
 	"os"
@@ -26,7 +26,7 @@ type TestContainer struct {
 
 	Repo *repository.Repo
 
-	ServiceSampler  *samplerService.Service
+	ServiceUser     *user.Service
 	ServiceCurrency *currency.Service
 }
 
@@ -49,13 +49,13 @@ func GetClean(t *testing.T) *TestContainer {
 
 	// service init
 	srvCurrency := currency.NewService(ctx, appLog, conf, repo)
-	serviceSampler := samplerService.InitService(ctx, appLog, repo, conf)
+	serviceSampler := user.InitService(ctx, appLog, repo, conf)
 	return &TestContainer{
 		Ctx:             ctx,
 		Cfg:             conf,
 		Logger:          appLog,
 		Repo:            repo,
-		ServiceSampler:  serviceSampler,
+		ServiceUser:     serviceSampler,
 		ServiceCurrency: srvCurrency,
 	}
 }

@@ -1,4 +1,4 @@
-package sampler
+package user
 
 import (
 	"context"
@@ -84,10 +84,6 @@ func (s *Service) CompleteGoogleAuth(ctx context.Context, code string) (*entitie
 			Name:  user.Name,
 		},
 	}, nil
-}
-
-func (s *Service) ParseAuthToken(token string) (*entities.AuthUser, error) {
-	return utils.ParseAuthToken(token)
 }
 
 func (s *Service) BuildUICallbackURL(session *entities.AuthSession, authErr error) string {
