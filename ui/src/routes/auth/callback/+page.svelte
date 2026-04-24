@@ -7,6 +7,11 @@
 
 	onMount(async () => {
 		const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+		// Remove the fragment from browser history immediately so the token is
+		// not visible in the URL bar or retained in history.
+		history.replaceState(null, "", window.location.pathname + window.location.search);
+
 		const error = hashParams.get("error");
 		if (error) {
 			message = error;

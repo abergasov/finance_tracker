@@ -12,40 +12,21 @@ export type AuthSession = {
 	user: AuthUser;
 };
 
-const storageKey = "finance-tracker-auth";
+// Session is kept in memory only (never written to localStorage/sessionStorage)
+// so it cannot be exfiltrated by an XSS attack.  The trade-off is that the
+// session is lost on a full page reload and the user must re-authenticate.
+let _session: AuthSession | null = null;
 
 export function loadSession(): AuthSession | null {
-	if (typeof window === "undefined") {
-		return null;
-	}
-
-	const raw = window.localStorage.getItem(storageKey);
-	if (!raw) {
-		return null;
-	}
-
-	try {
-		return JSON.parse(raw) as AuthSession;
-	} catch {
-		window.localStorage.removeItem(storageKey);
-		return null;
-	}
+	return _session;
 }
 
 export function saveSession(session: AuthSession): void {
-	if (typeof window === "undefined") {
-		return;
-	}
-
-	window.localStorage.setItem(storageKey, JSON.stringify(session));
+	_session = session;
 }
 
 export function clearSession(): void {
-	if (typeof window === "undefined") {
-		return;
-	}
-
-	window.localStorage.removeItem(storageKey);
+	_session = null;
 }
 
 export function buildBackendURL(path: string): string {
