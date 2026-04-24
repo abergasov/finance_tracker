@@ -11,14 +11,22 @@ function resolveInitialTheme(): Theme {
 	const applied = document.documentElement.getAttribute("data-theme");
 	if (applied === "dark" || applied === "light") return applied;
 	// Fallback: localStorage, then OS preference.
-	const saved = localStorage.getItem(STORAGE_KEY);
-	if (saved === "dark" || saved === "light") return saved;
+	try {
+		const saved = localStorage.getItem(STORAGE_KEY);
+		if (saved === "dark" || saved === "light") return saved;
+	} catch {
+		// Ignore storage access failures and fall back to OS preference.
+	}
 	return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function applyTheme(t: Theme) {
 	document.documentElement.setAttribute("data-theme", t);
-	localStorage.setItem(STORAGE_KEY, t);
+	try {
+		localStorage.setItem(STORAGE_KEY, t);
+	} catch {
+		// Ignore storage access failures; theme is still applied to the DOM.
+	}
 }
 
 function createThemeStore() {
