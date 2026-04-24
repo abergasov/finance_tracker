@@ -32,7 +32,7 @@ func InitAppRouter(log logger.AppLogger, service *user.Service, address string, 
 	if uiOrigin := service.UICORSOrigin(); uiOrigin != "" {
 		app.httpEngine.Use(cors.New(cors.Config{
 			AllowOrigins: []string{uiOrigin},
-			AllowHeaders: []string{fiber.HeaderAuthorization},
+			AllowHeaders: []string{fiber.HeaderAuthorization, fiber.HeaderContentType},
 		}))
 	}
 	if enableTelemetry {
@@ -56,6 +56,10 @@ func (s *Router) initRoutes() {
 	s.httpEngine.Get("/api/auth/google/login", s.handleGoogleLogin)
 	s.httpEngine.Get("/api/auth/google/callback", s.handleGoogleCallback)
 	s.httpEngine.Get("/api/auth/me", s.handleCurrentUser)
+
+	s.httpEngine.Post("/api/auth/category", s.handleCreateCategory)
+	s.httpEngine.Put("/api/auth/category/:id", s.handleUpdateCategory)
+	s.httpEngine.Delete("/api/auth/category/:id", s.handleDeleteCategory)
 }
 
 // Run starts the HTTP Server.
