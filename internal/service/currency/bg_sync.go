@@ -14,7 +14,7 @@ import (
 func (s *Service) bgSyncCurrencies() {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
-
+	s.SyncCurrencies()
 	for {
 		select {
 		case <-s.ctx.Done():
