@@ -3,6 +3,7 @@ package currency
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -66,7 +67,8 @@ func (s *Service) getExchangeUSDRate(ctx context.Context, token string, date tim
 			continue
 		}
 
-		result.RateAgainstUSD[c] = int64(rate * 100)
+		// Store rate as fixed-point integer scaled by 100 (e.g., 1.235 -> 124).
+		result.RateAgainstUSD[c] = int64(math.Round(rate * 100))
 	}
 
 	return result, nil
