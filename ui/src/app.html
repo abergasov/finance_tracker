@@ -3,6 +3,25 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--
+			Apply the persisted or OS-preferred theme before any content renders.
+			This prevents a flash of the wrong theme on first paint.
+		-->
+		<script>
+			(function () {
+				var saved;
+				try {
+					saved = localStorage.getItem('theme');
+				} catch (e) {
+					saved = null;
+				}
+				var theme =
+					saved === 'dark' ? 'dark' :
+					saved === 'light' ? 'light' :
+					window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				document.documentElement.setAttribute('data-theme', theme);
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

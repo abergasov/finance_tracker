@@ -46,13 +46,6 @@
 </div>
 
 <style>
-	:global(body) {
-		margin: 0;
-		font-family: Arial, sans-serif;
-		background: #f3f4f6;
-		color: #111827;
-	}
-
 	.shell {
 		min-height: 100vh;
 		display: grid;
@@ -63,7 +56,7 @@
 	.card {
 		padding: 2rem;
 		border-radius: 1rem;
-		background: #ffffff;
-		box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+		background: var(--bg-card);
+		box-shadow: 0 20px 45px var(--shadow-card);
 	}
 </style>
