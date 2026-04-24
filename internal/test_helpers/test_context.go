@@ -6,6 +6,7 @@ import (
 	"finance_tracker/internal/config"
 	"finance_tracker/internal/logger"
 	"finance_tracker/internal/repository"
+	"finance_tracker/internal/service/currency"
 	samplerService "finance_tracker/internal/service/sampler"
 	"finance_tracker/internal/storage/database"
 	"fmt"
@@ -25,7 +26,8 @@ type TestContainer struct {
 
 	Repo *repository.Repo
 
-	ServiceSampler *samplerService.Service
+	ServiceSampler  *samplerService.Service
+	ServiceCurrency *currency.Service
 }
 
 func GetClean(t *testing.T) *TestContainer {
@@ -46,13 +48,15 @@ func GetClean(t *testing.T) *TestContainer {
 	repo := repository.InitRepo(dbConnect)
 
 	// service init
+	srvCurrency := currency.NewService(ctx, appLog, conf, repo)
 	serviceSampler := samplerService.InitService(ctx, appLog, repo, conf)
 	return &TestContainer{
-		Ctx:            ctx,
-		Cfg:            conf,
-		Logger:         appLog,
-		Repo:           repo,
-		ServiceSampler: serviceSampler,
+		Ctx:             ctx,
+		Cfg:             conf,
+		Logger:          appLog,
+		Repo:            repo,
+		ServiceSampler:  serviceSampler,
+		ServiceCurrency: srvCurrency,
 	}
 }
 
@@ -85,6 +89,7 @@ func getTestConfig() *config.AppConfig {
 			DBName:         "sybill_test",
 			MaxConnections: 10,
 		},
+		ExchangeToken: os.Getenv("EXCHANGE_TOKEN"),
 		Auth: config.AuthConf{
 			UIBaseURL: "http://localhost:3000",
 			Token: config.TokenSigningConf{
