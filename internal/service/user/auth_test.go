@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,10 +16,11 @@ func TestBuildUICallbackURLIncludesSuccessfulSessionHandoff(t *testing.T) {
 	// given
 	container := testhelpers.GetClean(t)
 
+	uID := uuid.NewString()
 	token, err := utils.SignClaims(&entities.SignedTokenClaims{
 		Kind:   utils.AuthTokenKind,
 		Exp:    time.Now().Add(time.Hour).Unix(),
-		UserID: "user-1",
+		UserID: uID,
 		Email:  "person@example.com",
 		Locale: "en",
 		Name:   "Person Example",
@@ -28,7 +30,7 @@ func TestBuildUICallbackURLIncludesSuccessfulSessionHandoff(t *testing.T) {
 	redirectURL, err := url.Parse(container.ServiceSampler.BuildUICallbackURL(&entities.AuthSession{
 		Token: token,
 		User: entities.AuthUser{
-			ID:    "user-1",
+			ID:    uID,
 			Email: "person@example.com",
 			Name:  "Person Example",
 		},
@@ -40,13 +42,13 @@ func TestBuildUICallbackURLIncludesSuccessfulSessionHandoff(t *testing.T) {
 	fragment, err := url.ParseQuery(redirectURL.Fragment)
 	require.NoError(t, err)
 	require.Equal(t, token, fragment.Get("token"))
-	require.Equal(t, "user-1", fragment.Get("id"))
+	require.Equal(t, uID, fragment.Get("id"))
 	require.Equal(t, "person@example.com", fragment.Get("email"))
 	require.Equal(t, "Person Example", fragment.Get("name"))
 
 	homeData, err := container.ServiceSampler.ServeHomePage(container.Ctx, fragment.Get("token"))
 	require.NoError(t, err)
-	require.Equal(t, "user-1", homeData.User.ID)
+	require.Equal(t, uID, homeData.User.ID)
 	require.Equal(t, "person@example.com", homeData.User.Email)
 	require.Equal(t, "Person Example", homeData.User.Name)
 }

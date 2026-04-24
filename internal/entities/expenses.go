@@ -17,7 +17,6 @@ import (
 // --- hotel
 // -- restaurants
 // -- bars
-
 type UserExpenses struct {
 	MandatoryExpenses UserExpensesCategory `db:"mandatory_expenses" json:"mandatoryExpenses"`
 	OptionalExpenses  UserExpensesCategory `db:"optional_expenses" json:"optionalExpenses"`
