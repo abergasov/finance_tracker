@@ -61,7 +61,7 @@ func (s *Router) initRoutes() {
 // Run starts the HTTP Server.
 func (s *Router) Run() error {
 	s.log.Info("Starting HTTP server", logger.WithString("port", s.appAddr))
-	return s.httpEngine.Listen(s.appAddr)
+	return s.httpEngine.Listen(s.appAddr, fiber.ListenConfig{DisableStartupMessage: true})
 }
 
 func (s *Router) Stop() error {
