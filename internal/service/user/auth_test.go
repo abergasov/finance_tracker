@@ -27,7 +27,7 @@ func TestBuildUICallbackURLIncludesSuccessfulSessionHandoff(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	redirectURL, err := url.Parse(container.ServiceSampler.BuildUICallbackURL(&entities.AuthSession{
+	redirectURL, err := url.Parse(container.ServiceUser.BuildUICallbackURL(&entities.AuthSession{
 		Token: token,
 		User: entities.AuthUser{
 			ID:    uID,
@@ -46,7 +46,7 @@ func TestBuildUICallbackURLIncludesSuccessfulSessionHandoff(t *testing.T) {
 	require.Equal(t, "person@example.com", fragment.Get("email"))
 	require.Equal(t, "Person Example", fragment.Get("name"))
 
-	homeData, err := container.ServiceSampler.ServeHomePage(container.Ctx, fragment.Get("token"))
+	homeData, err := container.ServiceUser.ServeHomePage(container.Ctx, fragment.Get("token"))
 	require.NoError(t, err)
 	require.Equal(t, uID, homeData.User.ID)
 	require.Equal(t, "person@example.com", homeData.User.Email)

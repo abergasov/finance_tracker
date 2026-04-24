@@ -67,7 +67,7 @@ func (s *Router) handleCurrentUser(ctx fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
 	}
-	return ctx.JSON(fiber.Map{"user": user})
+	return ctx.JSON(user)
 }
 
 func (s *Router) redirectOrRespondAuthFailure(ctx fiber.Ctx, err error, statusCode int) error {

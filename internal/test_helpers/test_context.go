@@ -26,7 +26,7 @@ type TestContainer struct {
 
 	Repo *repository.Repo
 
-	ServiceSampler  *user.Service
+	ServiceUser     *user.Service
 	ServiceCurrency *currency.Service
 }
 
@@ -55,7 +55,7 @@ func GetClean(t *testing.T) *TestContainer {
 		Cfg:             conf,
 		Logger:          appLog,
 		Repo:            repo,
-		ServiceSampler:  serviceSampler,
+		ServiceUser:     serviceSampler,
 		ServiceCurrency: srvCurrency,
 	}
 }

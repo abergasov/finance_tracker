@@ -1,8 +1,6 @@
 package repository_test
 
 import (
-	"database/sql"
-	"finance_tracker/internal/entities"
 	testhelpers "finance_tracker/internal/test_helpers"
 	"finance_tracker/internal/test_helpers/seed"
 	"testing"
@@ -19,19 +17,9 @@ func TestCategoryExpenses(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, expensesList)
 
-	parentID, err := container.Repo.SaveUserExpenses(container.Ctx, &entities.UserExpensesCategoryDB{
-		UserID: user.ID,
-		Name:   uuid.NewString(),
-	})
+	parentID, err := container.Repo.SaveUserExpenses(container.Ctx, user.ID, nil, uuid.NewString())
 	require.NoError(t, err)
-	_, err = container.Repo.SaveUserExpenses(container.Ctx, &entities.UserExpensesCategoryDB{
-		UserID: user.ID,
-		Name:   uuid.NewString(),
-		ParentID: sql.NullInt64{
-			Int64: parentID,
-			Valid: true,
-		},
-	})
+	_, err = container.Repo.SaveUserExpenses(container.Ctx, user.ID, new(parentID), uuid.NewString())
 	require.NoError(t, err)
 
 	// when

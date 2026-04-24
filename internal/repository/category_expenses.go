@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"finance_tracker/internal/entities"
 	"finance_tracker/internal/utils"
 	"fmt"
@@ -29,11 +31,17 @@ func (r *Repo) LoadAllUserExpenses(ctx context.Context, userID uuid.UUID) ([]*en
 	return utils.QueryRowsToStruct[entities.UserExpensesCategoryDB](ctx, r.db.Client(), q, userID)
 }
 
-func (r *Repo) SaveUserExpenses(ctx context.Context, expenses *entities.UserExpensesCategoryDB) (int64, error) {
+func (r *Repo) SaveUserExpenses(ctx context.Context, userID uuid.UUID, parent *int64, name string) (int64, error) {
+	if name == "" {
+		return 0, errors.New("name is required")
+	}
 	q, p := utils.GenerateInsertSQL(TableCategoryExpenses, map[string]any{
-		"user_id":   expenses.UserID,
-		"parent_id": expenses.ParentID,
-		"name":      expenses.Name,
+		"user_id": userID,
+		"parent_id": sql.NullInt64{
+			Int64: utils.FromPointer(parent),
+			Valid: parent != nil,
+		},
+		"name": name,
 	})
 	q += " RETURNING id"
 	return utils.QueryRowPrimitive[int64](ctx, r.db.Client(), q, p...)

@@ -107,6 +107,9 @@ func QueryRowsPrimitive[T any](ctx context.Context, conn sqlscan.Querier, query 
 		}
 		result = append(result, data)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
