@@ -1,13 +1,11 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"strings"
-)
 
-const (
-	PQParamPlaceholder = "$"
-	MSParamPlaceholder = "@p"
+	"github.com/georgysavva/scany/v2/sqlscan"
 )
 
 func GenerateInsertSQL(tableName string, fieldsValuesMapping map[string]any) (sqlI string, params []any) {
@@ -29,7 +27,6 @@ func GenerateInsertSQL(tableName string, fieldsValuesMapping map[string]any) (sq
 // will panic if entityList is empty
 func GenerateBulkInsertSQL[T any](
 	tableName string,
-	paramPlaceholder string,
 	entityList []T,
 	entityProcessor func(entity T) map[string]any,
 ) (sqlI string, params []any) {
@@ -48,7 +45,7 @@ func GenerateBulkInsertSQL[T any](
 		localPlaceholders := make([]string, 0, len(columns))
 		for j := range columns {
 			params = append(params, sqlMapping[columns[j]])
-			localPlaceholders = append(localPlaceholders, fmt.Sprintf("%s%d", paramPlaceholder, counter))
+			localPlaceholders = append(localPlaceholders, fmt.Sprintf("$%d", counter))
 			counter++
 		}
 		placeholders = append(placeholders, fmt.Sprintf("(%s)", strings.Join(localPlaceholders, ",")))
@@ -56,4 +53,34 @@ func GenerateBulkInsertSQL[T any](
 
 	sqlI = fmt.Sprintf("INSERT INTO %s (%s) VALUES %s", tableName, strings.Join(columns, ","), strings.Join(placeholders, ","))
 	return sqlI, params
+}
+
+func QueryRowsToStruct[T any](ctx context.Context, conn sqlscan.Querier, query string, args ...any) ([]*T, error) {
+	rows, err := conn.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close() //nolint:errcheck
+	res := make([]*T, 0, 100)
+	rowScanner := sqlscan.NewRowScanner(rows)
+	for rows.Next() {
+		var t T
+		if errS := rowScanner.Scan(&t); errS != nil {
+			return nil, errS
+		}
+		res = append(res, &t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func QueryRowToStruct[T any](ctx context.Context, conn sqlscan.Querier, query string, args ...any) (*T, error) {
+	var t T
+	if err := sqlscan.Get(ctx, conn, &t, query, args...); err != nil {
+		return nil, fmt.Errorf("failed to get row: %w", err)
+	}
+	return &t, nil
 }

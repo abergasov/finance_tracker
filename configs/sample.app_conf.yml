@@ -8,3 +8,13 @@ conf_db:
   pass: AOifjwelmc8dw
   db_name: sybill
   max_connections: 10
+auth:
+  ui_base_url: http://localhost:3000
+  secure_cookies: false
+  google:
+    client_id: your-google-client-id
+    client_secret: your-google-client-secret
+    redirect_url: http://localhost:8000/api/auth/google/callback
+  token:
+    signing_key: replace-with-a-long-random-secret
+    expiration_minutes: 1440m

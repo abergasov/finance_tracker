@@ -1,12 +1,10 @@
 create table users
 (
-    u_id         uuid
-        constraint users_pk
-            primary key,
+    u_id         uuid primary key,
     created_at   timestamp,
     updated_at   timestamp,
-    user_version int default 1,
     email        varchar,
-    user_locale  varchar,
     user_name    varchar
 );
+
+create unique index if not exists users_email_uidx on users (lower(email));

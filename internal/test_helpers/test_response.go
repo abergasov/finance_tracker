@@ -17,6 +17,18 @@ func (r *TestResponse) Response() *http.Response {
 	return r.Res
 }
 
+func (r *TestResponse) FindCookie(t *testing.T, name string) *http.Cookie {
+	t.Helper()
+
+	for _, cookie := range r.Res.Cookies() {
+		if cookie.Name == name {
+			return cookie
+		}
+	}
+	t.Fatalf("cookie %q not found", name)
+	return nil
+}
+
 func (r *TestResponse) RequireText(t *testing.T) string {
 	t.Helper()
 	data, err := io.ReadAll(r.Res.Body)
@@ -34,6 +46,12 @@ func (r *TestResponse) RequireStatus(t *testing.T, status int) *TestResponse {
 	t.Helper()
 	require.NotNil(t, r.Res, "response is nil")
 	require.Equal(t, status, r.Res.StatusCode, "invalid response status code")
+	return r
+}
+
+func (r *TestResponse) RequireSeeOther(t *testing.T) *TestResponse {
+	t.Helper()
+	r.RequireStatus(t, http.StatusSeeOther)
 	return r
 }
 
