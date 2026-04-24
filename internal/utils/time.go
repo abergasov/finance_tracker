@@ -5,12 +5,7 @@ import (
 	"time"
 )
 
-func TimestampNumBeforeDays(days uint64) int64 {
-	tillDate := time.Now().AddDate(0, 0, -1*int(days))
-	return TimeToDayIntNum(tillDate)
-}
-
-func TimeIntervalToDays(start time.Time, end time.Time) []time.Time {
+func TimeIntervalToDays(start, end time.Time) []time.Time {
 	var days []time.Time
 	start = StartOfDay(start)
 	end = EndOfDay(end)
@@ -104,7 +99,7 @@ func TimeToPQ(t *time.Time) string {
 	return t.Format(time.DateTime)
 }
 
-// timestamp is in seconds
+// TimestampToTime expect timestamp is in seconds
 func TimestampToTime(timestamp int64) time.Time {
 	if timestamp == 0 {
 		return time.Time{}
@@ -112,8 +107,8 @@ func TimestampToTime(timestamp int64) time.Time {
 	return time.Unix(timestamp, 0).UTC()
 }
 
-func GetBetweenInterval(start time.Time, intervalMinutes int) (time.Time, time.Time) {
-	from := start.Add(-(time.Minute * time.Duration(intervalMinutes)))
-	to := start.Add(time.Minute * time.Duration(intervalMinutes))
+func GetBetweenInterval(start time.Time, intervalMinutes int) (from, to time.Time) {
+	from = start.Add(-(time.Minute * time.Duration(intervalMinutes)))
+	to = start.Add(time.Minute * time.Duration(intervalMinutes))
 	return from, to
 }

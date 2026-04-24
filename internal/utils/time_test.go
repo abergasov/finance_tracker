@@ -1,11 +1,12 @@
 package utils_test
 
 import (
-	"finance_tracker/internal/utils"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
+
+	"finance_tracker/internal/utils"
 
 	"github.com/stretchr/testify/require"
 )
@@ -214,55 +215,30 @@ func TestRemoveTimezone(t *testing.T) {
 
 func TestStartOfDay(t *testing.T) {
 	tests := []struct {
-		input    time.Time
-		expected time.Time
+		input         time.Time
+		expectedStart time.Time
+		expectedEnd   time.Time
 	}{
 		{
-			input:    time.Date(2024, time.November, 22, 14, 30, 45, 123456789, time.UTC),
-			expected: time.Date(2024, time.November, 22, 0, 0, 0, 0, time.UTC),
+			input:         time.Date(2024, time.November, 22, 14, 30, 45, 123456789, time.UTC),
+			expectedStart: time.Date(2024, time.November, 22, 0, 0, 0, 0, time.UTC),
+			expectedEnd:   time.Date(2024, time.November, 22, 23, 59, 59, 999999999, time.UTC),
 		},
 		{
-			input:    time.Date(2024, time.January, 1, 23, 59, 59, 999999999, time.UTC),
-			expected: time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+			input:         time.Date(2024, time.January, 1, 23, 59, 59, 999999999, time.UTC),
+			expectedStart: time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+			expectedEnd:   time.Date(2024, time.January, 1, 23, 59, 59, 999999999, time.UTC),
 		},
 		{
-			input:    time.Date(2023, time.December, 31, 5, 0, 0, 0, time.FixedZone("UTC+5", 5*3600)),
-			expected: time.Date(2023, time.December, 31, 0, 0, 0, 0, time.FixedZone("UTC+5", 5*3600)),
+			input:         time.Date(2023, time.December, 31, 5, 0, 0, 0, time.FixedZone("UTC+5", 5*3600)),
+			expectedStart: time.Date(2023, time.December, 31, 0, 0, 0, 0, time.FixedZone("UTC+5", 5*3600)),
+			expectedEnd:   time.Date(2023, time.December, 31, 23, 59, 59, 999999999, time.FixedZone("UTC+5", 5*3600)),
 		},
 	}
 
 	for _, test := range tests {
-		result := utils.StartOfDay(test.input)
-		if !result.Equal(test.expected) {
-			t.Errorf("StartOfDay(%v) = %v, expected %v", test.input, result, test.expected)
-		}
-	}
-}
-
-func TestEndOfDay(t *testing.T) {
-	tests := []struct {
-		input    time.Time
-		expected time.Time
-	}{
-		{
-			input:    time.Date(2024, time.November, 22, 14, 30, 45, 123456789, time.UTC),
-			expected: time.Date(2024, time.November, 22, 23, 59, 59, 999999999, time.UTC),
-		},
-		{
-			input:    time.Date(2024, time.January, 1, 23, 59, 59, 999999999, time.UTC),
-			expected: time.Date(2024, time.January, 1, 23, 59, 59, 999999999, time.UTC),
-		},
-		{
-			input:    time.Date(2023, time.December, 31, 5, 0, 0, 0, time.FixedZone("UTC+5", 5*3600)),
-			expected: time.Date(2023, time.December, 31, 23, 59, 59, 999999999, time.FixedZone("UTC+5", 5*3600)),
-		},
-	}
-
-	for _, test := range tests {
-		result := utils.EndOfDay(test.input)
-		if !result.Equal(test.expected) {
-			t.Errorf("EndOfDay(%v) = %v, expected %v", test.input, result, test.expected)
-		}
+		require.Equal(t, test.expectedEnd, utils.EndOfDay(test.input))
+		require.Equal(t, test.expectedStart, utils.StartOfDay(test.input))
 	}
 }
 
@@ -286,8 +262,7 @@ func TestTimeToRFCString(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := utils.TimeToRFC3339String(test.input)
-		require.Equal(t, test.expected, result)
+		require.Equal(t, test.expected, utils.TimeToRFC3339String(test.input))
 	}
 }
 
@@ -362,12 +337,6 @@ func TestTimeToDayHourIntNum(t *testing.T) {
 		require.Equal(t, expectedInt, utils.TimeToDayHourIntNum(parsedTime))
 		require.Equal(t, fmt.Sprintf("%d", expectedInt), utils.TimeToDayHourInt(parsedTime))
 	}
-}
-
-func TestTimestampNumBeforeDays(t *testing.T) {
-	time10DAgo := time.Now().Add(-10 * 24 * time.Hour) // This is just to ensure the function works, but we will not use this value directly.
-	res := utils.TimestampNumBeforeDays(10)
-	require.Equal(t, utils.TimeToDayIntNum(time10DAgo), res)
 }
 
 func TestTimeToPQ(t *testing.T) {
