@@ -7,3 +7,14 @@ type User struct {
 	Email string    `db:"email" json:"email"`
 	Name  string    `db:"user_name" json:"name"`
 }
+
+type AuthUser struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+type AuthSession struct {
+	Token string   `json:"token"`
+	User  AuthUser `json:"user"`
+}

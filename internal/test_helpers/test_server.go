@@ -41,27 +41,43 @@ func (ts *TestServer) AuthUser(mail string) {
 	ts.authUser = mail
 }
 
+func (ts *TestServer) DisableRedirects() {
+	ts.client.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+}
+
 func (ts *TestServer) Get(t *testing.T, path string) *TestResponse {
 	t.Helper()
-	return ts.Request(t, http.MethodGet, path, nil, nil)
+	return ts.Request(t, http.MethodGet, path, nil, nil, nil)
+}
+
+func (ts *TestServer) GetWithCookie(t *testing.T, path string, cookies map[string]string) *TestResponse {
+	t.Helper()
+	return ts.Request(t, http.MethodGet, path, nil, nil, cookies)
+}
+
+func (ts *TestServer) GetWithHeader(t *testing.T, path string, headers map[string]string) *TestResponse {
+	t.Helper()
+	return ts.Request(t, http.MethodGet, path, nil, headers, nil)
 }
 
 func (ts *TestServer) Post(t *testing.T, path string, body any) *TestResponse {
 	t.Helper()
-	return ts.Request(t, http.MethodPost, path, body, nil)
+	return ts.Request(t, http.MethodPost, path, body, nil, nil)
 }
 
 func (ts *TestServer) Put(t *testing.T, path string, body any) *TestResponse {
 	t.Helper()
-	return ts.Request(t, http.MethodPut, path, body, nil)
+	return ts.Request(t, http.MethodPut, path, body, nil, nil)
 }
 
 func (ts *TestServer) Delete(t *testing.T, path string, body any) *TestResponse {
 	t.Helper()
-	return ts.Request(t, http.MethodDelete, path, body, nil)
+	return ts.Request(t, http.MethodDelete, path, body, nil, nil)
 }
 
-func (ts *TestServer) Request(t *testing.T, method string, path string, body interface{}, headers map[string]string) *TestResponse {
+func (ts *TestServer) Request(t *testing.T, method, path string, body interface{}, headers, cookies map[string]string) *TestResponse {
 	t.Helper()
 
 	var b []byte
@@ -87,6 +103,14 @@ func (ts *TestServer) Request(t *testing.T, method string, path string, body int
 	if len(headers) > 0 {
 		for headerKey, headerVal := range headers {
 			req.Header.Add(headerKey, headerVal)
+		}
+	}
+	if len(cookies) > 0 {
+		for cookieKey, cookieVal := range cookies {
+			req.AddCookie(&http.Cookie{
+				Name:  cookieKey,
+				Value: cookieVal,
+			})
 		}
 	}
 	if ts.authUser != "" {

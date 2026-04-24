@@ -37,7 +37,7 @@ type AuthConf struct {
 
 type GoogleOAuth2Conf struct {
 	ClientID     string `yaml:"client_id"`
-	ClientSecret string `yaml:"client_secret"`
+	ClientSecret string `yaml:"client_secret"` //nolint:gosec // ok
 	RedirectURL  string `yaml:"redirect_url"`
 }
 

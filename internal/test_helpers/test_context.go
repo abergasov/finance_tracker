@@ -46,7 +46,7 @@ func GetClean(t *testing.T) *TestContainer {
 	repo := repository.InitRepo(dbConnect)
 
 	// service init
-	serviceSampler := samplerService.InitService(ctx, appLog, repo)
+	serviceSampler := samplerService.InitService(ctx, appLog, repo, conf)
 	return &TestContainer{
 		Ctx:            ctx,
 		Cfg:            conf,
@@ -84,6 +84,18 @@ func getTestConfig() *config.AppConfig {
 			Pass:           "AOifjwelmc8dw",
 			DBName:         "sybill_test",
 			MaxConnections: 10,
+		},
+		Auth: config.AuthConf{
+			UIBaseURL: "http://localhost:3000",
+			Token: config.TokenSigningConf{
+				SigningKey:        "test-signing-key",
+				ExpirationMinutes: 60,
+			},
+			Google: config.GoogleOAuth2Conf{
+				ClientID:     "test-client-id",
+				ClientSecret: "test-client-secret",
+				RedirectURL:  "http://localhost:8000/api/auth/google/callback",
+			},
 		},
 	}
 }

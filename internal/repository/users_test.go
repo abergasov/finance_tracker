@@ -17,7 +17,7 @@ func TestSaveUserByEmailHandlesDuplicateEmailCaseInsensitively(t *testing.T) {
 	usr := seed.NewUserBuilder().PopulateTest(t, container)
 
 	// then
-	dbUser, err := container.Repo.GetUserByID(container.Ctx, usr.ID)
+	dbUser, err := container.Repo.GetUserByEmail(container.Ctx, usr.Email)
 	require.NoError(t, err)
 
 	require.Equal(t, usr.Email, dbUser.Email)
