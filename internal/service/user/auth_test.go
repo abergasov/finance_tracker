@@ -1,4 +1,4 @@
-package sampler_test
+package user_test
 
 import (
 	"finance_tracker/internal/entities"
@@ -44,9 +44,9 @@ func TestBuildUICallbackURLIncludesSuccessfulSessionHandoff(t *testing.T) {
 	require.Equal(t, "person@example.com", fragment.Get("email"))
 	require.Equal(t, "Person Example", fragment.Get("name"))
 
-	user, err := container.ServiceSampler.ParseAuthToken(fragment.Get("token"))
+	homeData, err := container.ServiceSampler.ServeHomePage(container.Ctx, fragment.Get("token"))
 	require.NoError(t, err)
-	require.Equal(t, "user-1", user.ID)
-	require.Equal(t, "person@example.com", user.Email)
-	require.Equal(t, "Person Example", user.Name)
+	require.Equal(t, "user-1", homeData.User.ID)
+	require.Equal(t, "person@example.com", homeData.User.Email)
+	require.Equal(t, "Person Example", homeData.User.Name)
 }

@@ -1,4 +1,4 @@
-package sampler
+package user
 
 import (
 	"context"

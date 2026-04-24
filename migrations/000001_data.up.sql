@@ -19,3 +19,20 @@ CREATE TABLE currency_rates (
 
 CREATE UNIQUE INDEX currency_rates_timestamp_num_uq ON currency_rates (timestamp_num);
 CREATE INDEX currency_rates_timestamp_idx ON currency_rates (timestamp DESC);
+
+CREATE TABLE category_expenses (
+    id BIGSERIAL PRIMARY KEY,
+
+    user_id uuid NOT NULL,
+    parent_id bigint references category_expenses(id) on delete cascade,
+
+    name text NOT NULL,
+
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+
+    unique (user_id, parent_id, name)
+);
+
+CREATE INDEX user_expense_categories_user_id_idx ON category_expenses(user_id);
+CREATE INDEX user_expense_categories_parent_id_idx ON category_expenses(parent_id);

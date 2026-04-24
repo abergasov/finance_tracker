@@ -63,7 +63,7 @@ func (s *Router) handleCurrentUser(ctx fiber.Ctx) error {
 		return ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "missing token"})
 	}
 
-	user, err := s.service.ParseAuthToken(token)
+	user, err := s.service.ServeHomePage(ctx.Context(), token)
 	if err != nil {
 		return ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
 	}
