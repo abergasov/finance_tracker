@@ -34,5 +34,5 @@ CREATE TABLE category_expenses (
     unique (user_id, parent_id, name)
 );
 
-CREATE INDEX user_expense_categories_user_id_idx ON category_expenses(user_id);
-CREATE INDEX user_expense_categories_parent_id_idx ON category_expenses(parent_id);
+CREATE INDEX category_expenses_user_id_idx ON category_expenses(user_id);
+CREATE INDEX category_expenses_parent_id_idx ON category_expenses(parent_id);
