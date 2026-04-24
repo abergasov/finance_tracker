@@ -23,9 +23,9 @@ type UserExpenses struct {
 }
 
 type UserExpensesCategory struct {
-	ID           int64                 `db:"id" json:"id"`
-	ChildExpense *UserExpensesCategory `json:"childExpense"`
-	Name         string                `json:"name"`
+	ID       int64                   `db:"id" json:"id"`
+	Children []*UserExpensesCategory `json:"children,omitempty"`
+	Name     string                  `json:"name"`
 }
 
 type UserExpensesCategoryDB struct {
