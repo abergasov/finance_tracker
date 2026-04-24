@@ -81,13 +81,6 @@
 {/if}
 
 <style>
-	:global(body) {
-		margin: 0;
-		font-family: Arial, sans-serif;
-		background: #f3f4f6;
-		color: #111827;
-	}
-
 	.shell {
 		min-height: 100vh;
 		display: grid;
@@ -99,8 +92,8 @@
 		width: min(100%, 28rem);
 		padding: 2rem;
 		border-radius: 1rem;
-		background: #ffffff;
-		box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+		background: var(--bg-card);
+		box-shadow: 0 20px 45px var(--shadow-card);
 	}
 
 	.eyebrow {
@@ -108,7 +101,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		font-size: 0.75rem;
-		color: #4b5563;
+		color: var(--text-muted);
 	}
 
 	h1 {
@@ -128,15 +121,15 @@
 		padding: 0.8rem 1rem;
 		border: none;
 		border-radius: 0.75rem;
-		background: #111827;
-		color: #ffffff;
+		background: var(--btn-bg);
+		color: var(--btn-text);
 		font: inherit;
 		text-decoration: none;
 		cursor: pointer;
 	}
 
 	.error {
-		color: #b91c1c;
+		color: var(--error);
 		margin-top: 1rem;
 	}
 </style>
