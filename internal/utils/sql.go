@@ -63,12 +63,16 @@ func QueryRowsToStruct[T any](ctx context.Context, conn sqlscan.Querier, query s
 
 	defer rows.Close() //nolint:errcheck
 	res := make([]*T, 0, 100)
+	rowScanner := sqlscan.NewRowScanner(rows)
 	for rows.Next() {
 		var t T
-		if errS := sqlscan.NewRowScanner(rows).Scan(&t); errS != nil {
+		if errS := rowScanner.Scan(&t); errS != nil {
 			return nil, errS
 		}
 		res = append(res, &t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return res, nil
 }
