@@ -6,6 +6,7 @@ import (
 	"finance_tracker/internal/entities"
 	"finance_tracker/internal/utils"
 	"fmt"
+	"sort"
 
 	"github.com/google/uuid"
 )
@@ -41,6 +42,9 @@ func (s *Service) ServeHomePage(ctx context.Context, token string) (*entities.Ho
 }
 
 func (s *Service) buildUserExpensesCategories(ctx context.Context, uID uuid.UUID) (*entities.UserExpenses, error) {
+	if err := s.repo.EnsureRootCategories(ctx, uID); err != nil {
+		return nil, err
+	}
 	expensesList, err := s.repo.LoadAllUserExpenses(ctx, uID)
 	if err != nil {
 		return nil, err
@@ -86,11 +90,16 @@ func BuildUserExpensesTree(rows []*entities.UserExpensesCategoryDB) (*entities.U
 			return nil, fmt.Errorf("missing parent category: id=%d parent_id=%d", id, parentID.Int64)
 		}
 
-		if parent.ChildExpense != nil {
-			return nil, fmt.Errorf("parent category has more than one child: parent_id=%d", parent.ID)
-		}
+		parent.Children = append(parent.Children, node)
+	}
 
-		parent.ChildExpense = node
+	// Sort children by ID for deterministic output.
+	for _, node := range nodes {
+		if len(node.Children) > 1 {
+			sort.Slice(node.Children, func(i, j int) bool {
+				return node.Children[i].ID < node.Children[j].ID
+			})
+		}
 	}
 
 	var res entities.UserExpenses
@@ -98,8 +107,14 @@ func BuildUserExpensesTree(rows []*entities.UserExpensesCategoryDB) (*entities.U
 	for _, root := range roots {
 		switch root.Name {
 		case "mandatory":
+			if res.MandatoryExpenses.ID != 0 {
+				return nil, fmt.Errorf("duplicate root category: mandatory")
+			}
 			res.MandatoryExpenses = *root
 		case "optional":
+			if res.OptionalExpenses.ID != 0 {
+				return nil, fmt.Errorf("duplicate root category: optional")
+			}
 			res.OptionalExpenses = *root
 		default:
 			return nil, fmt.Errorf("unknown root expense category: %s", root.Name)

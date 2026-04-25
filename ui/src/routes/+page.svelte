@@ -7,10 +7,14 @@
 		loadSession,
 		saveSession,
 		type AuthSession,
+		type UserExpenses,
 	} from "$lib/auth";
+	import CategoryNode from "$lib/CategoryNode.svelte";
 
 	let loading = true;
 	let session: AuthSession | null = null;
+	let categories: UserExpenses | null = null;
+	let categoriesExpanded = true;
 	let error = "";
 	const googleLoginURL = buildGoogleLoginURL();
 
@@ -21,8 +25,8 @@
 			return;
 		}
 
-		const user = await fetchCurrentUser(storedSession.token);
-		if (!user) {
+		const result = await fetchCurrentUser(storedSession.token);
+		if (!result) {
 			clearSession();
 			error = "Your session expired. Sign in again.";
 			loading = false;
@@ -31,15 +35,25 @@
 
 		session = {
 			token: storedSession.token,
-			user,
+			user: result.user,
 		};
+		categories = result.categories;
 		saveSession(session);
 		loading = false;
 	});
 
+	async function refreshCategories() {
+		if (!session) return;
+		const result = await fetchCurrentUser(session.token);
+		if (result) {
+			categories = result.categories;
+		}
+	}
+
 	function signOut() {
 		clearSession();
 		session = null;
+		categories = null;
 		error = "";
 	}
 </script>
@@ -65,6 +79,43 @@
 			{/if}
 			<button on:click={signOut}>Sign out</button>
 		</div>
+
+		<!-- Categories card -->
+		<div class="card categories-card">
+			<button
+				class="card-header-btn"
+				on:click={() => (categoriesExpanded = !categoriesExpanded)}
+				aria-expanded={categoriesExpanded}
+			>
+				<span class="eyebrow">Expense categories</span>
+				<span class="chevron">{categoriesExpanded ? "▾" : "▸"}</span>
+			</button>
+
+			{#if categoriesExpanded}
+				{#if !categories || (!categories.mandatoryExpenses?.id && !categories.optionalExpenses?.id)}
+					<p class="muted">No categories yet.</p>
+				{:else}
+					<div class="tree">
+						{#if categories.mandatoryExpenses?.id}
+							<CategoryNode
+								node={categories.mandatoryExpenses}
+								isRoot={true}
+								token={session.token}
+								onRefresh={refreshCategories}
+							/>
+						{/if}
+						{#if categories.optionalExpenses?.id}
+							<CategoryNode
+								node={categories.optionalExpenses}
+								isRoot={true}
+								token={session.token}
+								onRefresh={refreshCategories}
+							/>
+						{/if}
+					</div>
+				{/if}
+			{/if}
+		</div>
 	</div>
 {:else}
 	<div class="shell">
@@ -83,9 +134,11 @@
 <style>
 	.shell {
 		min-height: 100vh;
-		display: grid;
-		place-items: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		padding: 1.5rem;
+		gap: 1rem;
 	}
 
 	.card {
@@ -96,12 +149,44 @@
 		box-shadow: 0 20px 45px var(--shadow-card);
 	}
 
+	.categories-card {
+		padding: 1rem 1.5rem;
+	}
+
+	.card-header-btn {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0.5rem 0;
+		cursor: pointer;
+		color: inherit;
+		font: inherit;
+		border-radius: 0.5rem;
+	}
+
+	.card-header-btn:hover {
+		background: var(--bg-hover, rgba(128, 128, 128, 0.08));
+	}
+
+	.chevron {
+		font-size: 0.85rem;
+		color: var(--text-muted);
+	}
+
 	.eyebrow {
 		margin: 0 0 0.5rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		font-size: 0.75rem;
 		color: var(--text-muted);
+	}
+
+	/* When eyebrow is inside the header button, remove bottom margin */
+	.card-header-btn .eyebrow {
+		margin: 0;
 	}
 
 	h1 {
@@ -111,6 +196,16 @@
 
 	p {
 		margin: 0 0 1rem;
+	}
+
+	.muted {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		margin: 0.5rem 0 0;
+	}
+
+	.tree {
+		padding: 0.5rem 0 0;
 	}
 
 	.button,

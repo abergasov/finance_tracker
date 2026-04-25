@@ -24,6 +24,7 @@ type TestContainer struct {
 	Cfg    *config.AppConfig
 	Logger logger.AppLogger
 
+	DB   database.DBConnector
 	Repo *repository.Repo
 
 	ServiceUser     *user.Service
@@ -54,6 +55,7 @@ func GetClean(t *testing.T) *TestContainer {
 		Ctx:             ctx,
 		Cfg:             conf,
 		Logger:          appLog,
+		DB:              dbConnect,
 		Repo:            repo,
 		ServiceUser:     serviceSampler,
 		ServiceCurrency: srvCurrency,

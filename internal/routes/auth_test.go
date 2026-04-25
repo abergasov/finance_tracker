@@ -14,6 +14,7 @@ import (
 
 	"finance_tracker/internal/routes"
 	testhelpers "finance_tracker/internal/test_helpers"
+	"finance_tracker/internal/test_helpers/seed"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -136,6 +137,30 @@ func TestCurrentUserCORSAllowsConfiguredUIOrigin(t *testing.T) {
 		require.Equal(t, container.Cfg.Auth.UIBaseURL, response.Res.Header.Get("Access-Control-Allow-Origin"))
 		require.Contains(t, response.Res.Header.Get("Vary"), "Origin")
 	})
+}
+
+func TestCurrentUserReturnsServerErrorOnCategoryLoadFailure(t *testing.T) {
+	container := testhelpers.GetClean(t)
+	srv := testhelpers.NewTestServer(t, container)
+
+	usr := seed.NewUserBuilder().PopulateTest(t, container)
+	_, err := container.DB.Client().ExecContext(container.Ctx, `
+		INSERT INTO category_expenses (user_id, parent_id, name)
+		VALUES ($1, NULL, $2)
+	`, usr.ID, "corrupt-root")
+	require.NoError(t, err)
+
+	token := signToken(t, container.Cfg.Auth.Token.SigningKey, &entities.SignedTokenClaims{
+		Kind:   "auth",
+		Exp:    time.Now().Add(time.Hour).Unix(),
+		UserID: usr.ID.String(),
+		Email:  usr.Email,
+		Name:   usr.Name,
+	})
+
+	var payload map[string]string
+	srv.GetWithHeader(t, "/api/auth/me", withBearer(token)).RequireServerError(t).RequireUnmarshal(t, &payload)
+	require.Equal(t, "internal server error", payload["error"])
 }
 
 func signToken(t *testing.T, signingKey string, claims *entities.SignedTokenClaims) string {
