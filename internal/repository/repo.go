@@ -25,6 +25,9 @@ func InitRepo(db database.DBConnector) *Repo {
 // isUniqueViolation reports whether err is a PostgreSQL unique-constraint
 // violation (SQLSTATE 23505).
 func isUniqueViolation(err error) bool {
+	if err == nil {
+		return false
+	}
 	if strings.Contains(err.Error(), "23505") {
 		return true
 	}
