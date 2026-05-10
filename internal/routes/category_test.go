@@ -58,7 +58,7 @@ func TestCategoryCRUDRoutes(t *testing.T) {
 		})
 	})
 
-	t.Run("shuld able update an existing category", func(t *testing.T) {
+	t.Run("should update an existing category", func(t *testing.T) {
 		t.Run("should not allow update with invalid name", func(t *testing.T) {
 			var payload map[string]string
 			srv.Put(t, fmt.Sprintf("/api/v1/category/%d", createResp.ID), map[string]any{
