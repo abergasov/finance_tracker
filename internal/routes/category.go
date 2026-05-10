@@ -14,7 +14,7 @@ type updateCategoryRequest struct {
 	Name string `json:"name"`
 }
 
-// handleCreateCategory handles POST /api/auth/category.
+// handleCreateCategory handles POST /api/v1/category.
 // Requires an authenticated bearer token. The parent_id must point to an
 // existing category owned by the user; name must be non-empty.
 func (s *Router) handleCreateCategory(ctx fiber.Ctx, userID uuid.UUID) error {
@@ -42,7 +42,7 @@ func (s *Router) handleCreateCategory(ctx fiber.Ctx, userID uuid.UUID) error {
 	return ctx.Status(http.StatusCreated).JSON(fiber.Map{"id": id})
 }
 
-// handleUpdateCategory handles PUT /api/auth/category/:id.
+// handleUpdateCategory handles PUT /api/v1/category/:id.
 // Root categories (mandatory/optional) cannot be renamed.
 func (s *Router) handleUpdateCategory(ctx fiber.Ctx, userID uuid.UUID) error {
 	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
@@ -65,7 +65,7 @@ func (s *Router) handleUpdateCategory(ctx fiber.Ctx, userID uuid.UUID) error {
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{"ok": true})
 }
 
-// handleDeleteCategory handles DELETE /api/auth/category/:id.
+// handleDeleteCategory handles DELETE /api/v1/category/:id.
 // Root categories cannot be deleted. Deletion cascades to all descendants.
 func (s *Router) handleDeleteCategory(ctx fiber.Ctx, userID uuid.UUID) error {
 	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
