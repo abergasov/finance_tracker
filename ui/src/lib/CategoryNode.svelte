@@ -1,8 +1,6 @@
 <script lang="ts">
 	import type { ExpensesCategory } from '$lib/auth';
 	import { createCategory, updateCategory, deleteCategory } from '$lib/auth';
-	import CategoryNode from './CategoryNode.svelte';
-
 	export let node: ExpensesCategory;
 	export let isRoot: boolean = false;
 	export let token: string;
@@ -100,6 +98,7 @@
 		{#if editMode}
 			<input
 				class="inline-input"
+				aria-label="Rename category"
 				bind:value={editName}
 				on:keydown={(e) => {
 					if (e.key === 'Enter') submitEdit();
@@ -107,12 +106,12 @@
 				}}
 				disabled={busy}
 			/>
-			<button class="action-btn save" on:click={submitEdit} disabled={busy}>✓</button>
-			<button class="action-btn cancel" on:click={cancelEdit} disabled={busy}>✕</button>
+			<button class="action-btn save" aria-label="Save rename" on:click={submitEdit} disabled={busy}>✓</button>
+			<button class="action-btn cancel" aria-label="Cancel rename" on:click={cancelEdit} disabled={busy}>✕</button>
 		{:else}
 			<span class="node-name" class:root-name={isRoot}>{node.name}</span>
 			<div class="actions">
-				<button class="action-btn add" title="Add subcategory" on:click={startAdd} disabled={busy}>
+				<button class="action-btn add" title="Add subcategory" aria-label="Add subcategory" on:click={startAdd} disabled={busy}>
 					+
 				</button>
 				{#if !isRoot}
@@ -128,6 +127,7 @@
 					<button
 						class="action-btn delete"
 						title="Delete"
+						aria-label="Delete category"
 						on:click={handleDelete}
 						disabled={busy}
 					>
@@ -158,7 +158,7 @@
 			<button class="action-btn save" on:click={submitAdd} disabled={busy || !newName.trim()}>
 				Add
 			</button>
-			<button class="action-btn cancel" on:click={cancelAdd} disabled={busy}>✕</button>
+			<button class="action-btn cancel" aria-label="Cancel add" on:click={cancelAdd} disabled={busy}>✕</button>
 		</div>
 	{/if}
 
