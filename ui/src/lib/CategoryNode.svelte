@@ -147,6 +147,7 @@
 			<input
 				class="inline-input"
 				placeholder="Category name"
+				aria-label="New category name"
 				bind:value={newName}
 				on:keydown={(e) => {
 					if (e.key === 'Enter') submitAdd();
