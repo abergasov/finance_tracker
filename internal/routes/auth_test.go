@@ -117,7 +117,7 @@ func TestCurrentUserCORSAllowsConfiguredUIOrigin(t *testing.T) {
 	})
 
 	t.Run("preflight allows configured ui origin", func(t *testing.T) {
-		response := srv.Request(t, http.MethodOptions, "/api/auth/me", nil, map[string]string{
+		response := srv.Request(t, http.MethodOptions, "/api/v1/me", nil, map[string]string{
 			"Origin":                         container.Cfg.Auth.UIBaseURL,
 			"Access-Control-Request-Method":  http.MethodGet,
 			"Access-Control-Request-Headers": "authorization",

@@ -63,7 +63,7 @@ export type CurrentUserResult = {
 };
 
 export async function fetchCurrentUser(token: string): Promise<CurrentUserResult | null> {
-	const response = await fetch(buildBackendURL("/api/auth/me"), {
+	const response = await fetch(buildBackendURL("/api/v1/me"), {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
