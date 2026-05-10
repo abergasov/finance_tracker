@@ -82,20 +82,20 @@ func TestCurrentUserAuthChecks(t *testing.T) {
 	})
 
 	t.Run("missing bearer token", func(t *testing.T) {
-		srv.Get(t, "/api/auth/me").RequireUnauthorized(t)
+		srv.Get(t, "/api/v1/me").RequireUnauthorized(t)
 	})
 
 	t.Run("expired token", func(t *testing.T) {
-		srv.GetWithHeader(t, "/api/auth/me", withBearer(expiredToken)).RequireUnauthorized(t)
+		srv.GetWithHeader(t, "/api/v1/me", withBearer(expiredToken)).RequireUnauthorized(t)
 	})
 
 	t.Run("tampered token", func(t *testing.T) {
-		srv.GetWithHeader(t, "/api/auth/me", withBearer(tamperToken(validToken))).RequireUnauthorized(t)
+		srv.GetWithHeader(t, "/api/v1/me", withBearer(tamperToken(validToken))).RequireUnauthorized(t)
 	})
 
 	t.Run("valid token", func(t *testing.T) {
 		var payload entities.HomePage
-		srv.GetWithHeader(t, "/api/auth/me", withBearer(validToken)).RequireOk(t).RequireUnmarshal(t, &payload)
+		srv.GetWithHeader(t, "/api/v1/me", withBearer(validToken)).RequireOk(t).RequireUnmarshal(t, &payload)
 
 		require.Equal(t, "person@example.com", payload.User.Email)
 		require.Equal(t, "Person Example", payload.User.Name)
@@ -117,7 +117,7 @@ func TestCurrentUserCORSAllowsConfiguredUIOrigin(t *testing.T) {
 	})
 
 	t.Run("preflight allows configured ui origin", func(t *testing.T) {
-		response := srv.Request(t, http.MethodOptions, "/api/auth/me", nil, map[string]string{
+		response := srv.Request(t, http.MethodOptions, "/api/v1/me", nil, map[string]string{
 			"Origin":                         container.Cfg.Auth.UIBaseURL,
 			"Access-Control-Request-Method":  http.MethodGet,
 			"Access-Control-Request-Headers": "authorization",
@@ -129,7 +129,7 @@ func TestCurrentUserCORSAllowsConfiguredUIOrigin(t *testing.T) {
 	})
 
 	t.Run("authorized request includes allow origin header", func(t *testing.T) {
-		response := srv.GetWithHeader(t, "/api/auth/me", map[string]string{
+		response := srv.GetWithHeader(t, "/api/v1/me", map[string]string{
 			"Origin":        container.Cfg.Auth.UIBaseURL,
 			"Authorization": "Bearer " + validToken,
 		}).RequireOk(t)
