@@ -116,7 +116,13 @@
 					+
 				</button>
 				{#if !isRoot}
-					<button class="action-btn edit" title="Rename" on:click={startEdit} disabled={busy}>
+					<button
+						class="action-btn edit"
+						title="Rename"
+						aria-label="Rename"
+						on:click={startEdit}
+						disabled={busy}
+					>
 						✎
 					</button>
 					<button
