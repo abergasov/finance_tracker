@@ -106,8 +106,8 @@
 				}}
 				disabled={busy}
 			/>
-			<button class="action-btn save" aria-label="Save rename" on:click={submitEdit} disabled={busy}>✓</button>
-			<button class="action-btn cancel" aria-label="Cancel rename" on:click={cancelEdit} disabled={busy}>✕</button>
+			<button class="action-btn save" aria-label="Save category name" on:click={submitEdit} disabled={busy}>✓</button>
+			<button class="action-btn cancel" aria-label="Cancel category rename" on:click={cancelEdit} disabled={busy}>✕</button>
 		{:else}
 			<span class="node-name" class:root-name={isRoot}>{node.name}</span>
 			<div class="actions">
@@ -158,7 +158,7 @@
 			<button class="action-btn save" on:click={submitAdd} disabled={busy || !newName.trim()}>
 				Add
 			</button>
-			<button class="action-btn cancel" aria-label="Cancel add" on:click={cancelAdd} disabled={busy}>✕</button>
+			<button class="action-btn cancel" aria-label="Cancel adding subcategory" on:click={cancelAdd} disabled={busy}>✕</button>
 		</div>
 	{/if}
 
