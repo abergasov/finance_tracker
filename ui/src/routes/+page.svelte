@@ -7,12 +7,24 @@
 		loadSession,
 		saveSession,
 		type AuthSession,
+		type UserExpenses,
 	} from "$lib/auth";
+	import AddExpenseModal from "$lib/AddExpenseModal.svelte";
 
 	let loading = true;
 	let session: AuthSession | null = null;
+	let categories: UserExpenses | null = null;
+	let supportedCurrencies: string[] = [];
 	let error = "";
+	let showExpenseModal = false;
 	const googleLoginURL = buildGoogleLoginURL();
+
+	function handleExpenseAuthFailure() {
+		clearSession();
+		session = null;
+		showExpenseModal = false;
+		error = "Your session expired. Sign in again.";
+	}
 
 	onMount(async () => {
 		const storedSession = loadSession();
@@ -37,6 +49,8 @@
 			token: storedSession.token,
 			user: result.data.user,
 		};
+		categories = result.data.categories;
+		supportedCurrencies = result.data.supportedCurrencies;
 		saveSession(session);
 		loading = false;
 	});
@@ -61,8 +75,19 @@
 			{#if session.user.locale}
 				<p>Locale: {session.user.locale}</p>
 			{/if}
+			<button class="button" on:click={() => (showExpenseModal = true)}>Add expenses</button>
 		</div>
 	</div>
+
+	<AddExpenseModal
+		open={showExpenseModal}
+		token={session.token}
+		defaultCurrency={session.user.default_currency}
+		{supportedCurrencies}
+		{categories}
+		onClose={() => (showExpenseModal = false)}
+		onAuthFailure={handleExpenseAuthFailure}
+	/>
 {:else}
 	<div class="shell">
 		<div class="card">
