@@ -5,6 +5,9 @@
 	let open = false;
 	let isSignedIn = false;
 	let menuEl: HTMLDivElement | null = null;
+	let dropdownEl: HTMLDivElement | null = null;
+	let firstItemEl: HTMLAnchorElement | null = null;
+	let lastItemEl: HTMLButtonElement | null = null;
 
 	onMount(() => {
 		isSignedIn = loadSession() !== null;
@@ -15,6 +18,13 @@
 		// even if a page-level signout was performed before the menu was used.
 		isSignedIn = loadSession() !== null;
 		open = !open;
+		
+		// Focus first menu item when opening
+		if (open) {
+			setTimeout(() => {
+				firstItemEl?.focus();
+			}, 0);
+		}
 	}
 
 	function closeMenu() {
@@ -33,17 +43,53 @@
 			open = false;
 		}
 	}
+
+	function handleKeyDown(e: KeyboardEvent) {
+		if (!open) return;
+
+		switch (e.key) {
+			case "Escape":
+				e.preventDefault();
+				open = false;
+				// Return focus to the hamburger button
+				menuEl?.querySelector<HTMLButtonElement>(".hamburger-btn")?.focus();
+				break;
+			case "ArrowDown":
+				e.preventDefault();
+				// Move focus to next item or wrap to first
+				if (document.activeElement === firstItemEl && lastItemEl) {
+					lastItemEl.focus();
+				} else if (document.activeElement === lastItemEl && firstItemEl) {
+					firstItemEl.focus();
+				} else {
+					firstItemEl?.focus();
+				}
+				break;
+			case "ArrowUp":
+				e.preventDefault();
+				// Move focus to previous item or wrap to last
+				if (document.activeElement === lastItemEl && firstItemEl) {
+					firstItemEl.focus();
+				} else if (document.activeElement === firstItemEl && lastItemEl) {
+					lastItemEl.focus();
+				} else {
+					lastItemEl?.focus();
+				}
+				break;
+		}
+	}
 </script>
 
-<svelte:window on:pointerdown={handleWindowPointerDown} />
+<svelte:window on:pointerdown={handleWindowPointerDown} on:keydown={handleKeyDown} />
 
 <div class="hamburger-root" bind:this={menuEl}>
 	<button
 		class="hamburger-btn"
 		on:click={toggleMenu}
-		aria-label="Open navigation menu"
+		aria-label={open ? "Close navigation menu" : "Open navigation menu"}
 		aria-expanded={open}
 		aria-haspopup="true"
+		aria-controls="nav-dropdown"
 	>
 		<span class="bar"></span>
 		<span class="bar"></span>
@@ -51,10 +97,23 @@
 	</button>
 
 	{#if open}
-		<div class="dropdown" role="menu">
-			<a class="menu-item" href="/account" on:click={closeMenu} role="menuitem">Account</a>
+		<div class="dropdown" id="nav-dropdown" bind:this={dropdownEl} role="menu">
+			<a 
+				class="menu-item" 
+				href="/account" 
+				on:click={closeMenu} 
+				role="menuitem"
+				bind:this={firstItemEl}
+			>
+				Account
+			</a>
 			{#if isSignedIn}
-				<button class="menu-item menu-item--btn" on:click={signOut} role="menuitem">
+				<button 
+					class="menu-item menu-item--btn" 
+					on:click={signOut} 
+					role="menuitem"
+					bind:this={lastItemEl}
+				>
 					Sign out
 				</button>
 			{/if}
