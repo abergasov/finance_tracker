@@ -72,23 +72,28 @@
 		currencyError = "";
 		currencySaved = false;
 
-		const result = await updateDefaultCurrency(session.token, selectedCurrency);
-		if (result.ok) {
-			session = {
-				token: session.token,
-				user: { ...session.user, default_currency: selectedCurrency },
-			};
-			saveSession(session);
-			currencySaved = true;
-			setTimeout(() => (currencySaved = false), 2000);
-		} else if (result.errorKind === "auth") {
-			clearSession();
-			session = null;
-			error = "Your session expired. Sign in again.";
-		} else {
+		try {
+			const result = await updateDefaultCurrency(session.token, selectedCurrency);
+			if (result.ok) {
+				session = {
+					token: session.token,
+					user: { ...session.user, default_currency: selectedCurrency },
+				};
+				saveSession(session);
+				currencySaved = true;
+				setTimeout(() => (currencySaved = false), 2000);
+			} else if (result.errorKind === "auth") {
+				clearSession();
+				session = null;
+				error = "Your session expired. Sign in again.";
+			} else {
+				currencyError = "Failed to save currency. Please try again.";
+			}
+		} catch {
 			currencyError = "Failed to save currency. Please try again.";
+		} finally {
+			currencySaving = false;
 		}
-		currencySaving = false;
 	}
 </script>
 
