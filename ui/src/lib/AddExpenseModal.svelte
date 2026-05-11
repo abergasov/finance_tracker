@@ -33,10 +33,43 @@
 		return items;
 	})();
 
+	function pickCurrency(currencies: string[], preferred: string): string {
+		if (preferred && currencies.includes(preferred)) {
+			return preferred;
+		}
+		return currencies[0] ?? '';
+	}
+
 	let selectedCategoryId: number = 0;
 	let selectedCurrency: string = defaultCurrency || 'USD';
+	let currencySearch: string = '';
 	let amount: string = '';
 	let submitting = false;
+
+	// Filter logic:
+	//   0 chars  → full list
+	//   1 char   → currencies containing that character (case-insensitive)
+	//   2+ chars → normal case-insensitive substring match
+	$: filteredCurrencies = (() => {
+		if (currencySearch.length === 0) return supportedCurrencies;
+		const q = currencySearch.toLowerCase();
+		return supportedCurrencies.filter((c) => c.toLowerCase().includes(q));
+	})();
+
+	$: defaultSelectedCurrency = pickCurrency(supportedCurrencies, defaultCurrency || 'USD');
+
+	// Keep selectedCurrency in sync when the filter hides the current selection.
+	$: if (currencySearch.trim().length === 0) {
+		selectedCurrency = pickCurrency(supportedCurrencies, selectedCurrency || defaultSelectedCurrency);
+	} else if (filteredCurrencies.length > 0 && !filteredCurrencies.includes(selectedCurrency)) {
+		selectedCurrency = filteredCurrencies[0];
+	}
+
+	$: submitCurrency =
+		currencySearch.trim().length === 0
+			? pickCurrency(supportedCurrencies, selectedCurrency || defaultSelectedCurrency)
+			: pickCurrency(filteredCurrencies, selectedCurrency || defaultSelectedCurrency);
+
 	let error = '';
 	let dialogEl: HTMLDivElement | null = null;
 	let previouslyFocusedEl: HTMLElement | null = null;
@@ -69,7 +102,8 @@
 
 		// Reset form each time the modal opens.
 		selectedCategoryId = flatCategories.length > 0 ? flatCategories[0].id : 0;
-		selectedCurrency = defaultCurrency || 'USD';
+		selectedCurrency = defaultSelectedCurrency;
+		currencySearch = '';
 		amount = '';
 		error = '';
 
@@ -97,13 +131,21 @@
 			error = 'Please select a category.';
 			return;
 		}
+		if (currencySearch.trim().length > 0 && filteredCurrencies.length === 0) {
+			error = 'Please select a matching currency.';
+			return;
+		}
+		if (!submitCurrency) {
+			error = 'Please select a currency.';
+			return;
+		}
 		if (!amount.trim()) {
 			error = 'Please enter an amount.';
 			return;
 		}
 
 		submitting = true;
-		const result = await createExpense(token, selectedCategoryId, selectedCurrency, amount.trim());
+		const result = await createExpense(token, selectedCategoryId, submitCurrency, amount.trim());
 		submitting = false;
 
 		if (!result.ok) {
@@ -170,17 +212,32 @@
 				</select>
 			{/if}
 
-			<label class="field-label" for="expense-currency">Currency</label>
-			<select
-				id="expense-currency"
-				class="field-select"
-				bind:value={selectedCurrency}
+			<label class="field-label" for="expense-currency-search">Currency</label>
+			<input
+				id="expense-currency-search"
+				class="field-input"
+				type="text"
+				placeholder="Search currencies…"
+				bind:value={currencySearch}
 				disabled={submitting}
-			>
-				{#each supportedCurrencies as code}
-					<option value={code}>{code}</option>
-				{/each}
-			</select>
+				autocomplete="off"
+				spellcheck="false"
+			/>
+			{#if filteredCurrencies.length === 0}
+				<p class="hint">No currencies match.</p>
+			{:else}
+				<select
+					id="expense-currency"
+					aria-label="Currency selection"
+					class="field-select"
+					bind:value={selectedCurrency}
+					disabled={submitting}
+				>
+					{#each filteredCurrencies as code}
+						<option value={code}>{code}</option>
+					{/each}
+				</select>
+			{/if}
 
 			<label class="field-label" for="expense-amount">Amount</label>
 			<input
