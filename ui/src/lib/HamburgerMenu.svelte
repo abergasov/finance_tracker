@@ -4,7 +4,7 @@
 
 	let open = false;
 	let isSignedIn = false;
-	let menuEl: HTMLDivElement;
+	let menuEl: HTMLDivElement | null = null;
 
 	onMount(() => {
 		isSignedIn = loadSession() !== null;
@@ -29,7 +29,7 @@
 	}
 
 	function handleWindowPointerDown(e: PointerEvent) {
-		if (open && menuEl && !menuEl.contains(e.target as Node)) {
+		if (open && menuEl !== null && !menuEl.contains(e.target as Node)) {
 			open = false;
 		}
 	}
