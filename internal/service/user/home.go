@@ -69,8 +69,9 @@ func BuildUserExpensesTree(rows []*entities.UserExpensesCategoryDB) (*entities.U
 		}
 
 		nodes[row.ID] = &entities.UserExpensesCategory{
-			ID:   row.ID,
-			Name: row.Name,
+			ID:    row.ID,
+			Name:  row.Name,
+			Color: row.Color,
 		}
 		parents[row.ID] = row.ParentID
 	}

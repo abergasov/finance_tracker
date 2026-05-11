@@ -15,6 +15,7 @@ export type AuthSession = {
 export type ExpensesCategory = {
 	id: number;
 	name: string;
+	color: string;
 	children?: ExpensesCategory[];
 };
 
@@ -86,6 +87,7 @@ export async function createCategory(
 	token: string,
 	parentId: number,
 	name: string,
+	color?: string,
 ): Promise<{ id: number } | null> {
 	const response = await fetch(buildBackendURL("/api/v1/category"), {
 		method: "POST",
@@ -93,7 +95,7 @@ export async function createCategory(
 			Authorization: `Bearer ${token}`,
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify({ parent_id: parentId, name }),
+		body: JSON.stringify({ parent_id: parentId, name, color }),
 	});
 	if (!response.ok) {
 		return null;
@@ -105,6 +107,7 @@ export async function updateCategory(
 	token: string,
 	id: number,
 	name: string,
+	color?: string,
 ): Promise<boolean> {
 	const response = await fetch(buildBackendURL(`/api/v1/category/${id}`), {
 		method: "PUT",
@@ -112,7 +115,7 @@ export async function updateCategory(
 			Authorization: `Bearer ${token}`,
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify({ name }),
+		body: JSON.stringify({ name, color }),
 	});
 	return response.ok;
 }

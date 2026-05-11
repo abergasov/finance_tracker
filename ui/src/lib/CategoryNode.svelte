@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ExpensesCategory } from '$lib/auth';
-	import { createCategory, updateCategory, deleteCategory } from '$lib/auth';
+	import { createCategory, deleteCategory, updateCategory } from '$lib/auth';
+
 	export let node: ExpensesCategory;
 	export let isRoot: boolean = false;
 	export let token: string;
@@ -9,13 +10,19 @@
 	let expanded = true;
 	let editMode = false;
 	let editName = '';
+	let editColor = '';
+	let editPickerColor = '#000000';
 	let addMode = false;
 	let newName = '';
+	let newColor = '';
+	let newPickerColor = '#000000';
 	let busy = false;
 	let nodeError = '';
 
 	function startEdit() {
 		editName = node.name;
+		editColor = node.color ?? '';
+		editPickerColor = editColor || '#000000';
 		editMode = true;
 		nodeError = '';
 	}
@@ -29,7 +36,7 @@
 		if (!editName.trim()) return;
 		busy = true;
 		nodeError = '';
-		const ok = await updateCategory(token, node.id, editName.trim());
+		const ok = await updateCategory(token, node.id, editName.trim(), editColor.trim());
 		busy = false;
 		if (!ok) {
 			nodeError = 'Failed to rename category.';
@@ -41,6 +48,8 @@
 
 	function startAdd() {
 		newName = '';
+		newColor = '';
+		newPickerColor = '#000000';
 		addMode = true;
 		nodeError = '';
 	}
@@ -54,7 +63,7 @@
 		if (!newName.trim()) return;
 		busy = true;
 		nodeError = '';
-		const result = await createCategory(token, node.id, newName.trim());
+		const result = await createCategory(token, node.id, newName.trim(), newColor.trim());
 		busy = false;
 		if (!result) {
 			nodeError = 'Failed to create category.';
@@ -82,7 +91,6 @@
 
 <div class="node" class:root={isRoot}>
 	<div class="node-row">
-		<!-- Expand/collapse toggle shown only when there are children -->
 		{#if hasChildren}
 			<button
 				class="toggle"
@@ -106,9 +114,30 @@
 				}}
 				disabled={busy}
 			/>
+			<input
+				class="inline-input color-input"
+				aria-label="Category color"
+				placeholder="#0f0f0f"
+				bind:value={editColor}
+				on:input={(e) => {
+					editPickerColor = (e.currentTarget as HTMLInputElement).value;
+				}}
+				disabled={busy}
+			/>
+			<input
+				class="picker"
+				type="color"
+				aria-label="Pick category color"
+				bind:value={editPickerColor}
+				on:input={(e) => {
+					editColor = (e.currentTarget as HTMLInputElement).value;
+				}}
+				disabled={busy}
+			/>
 			<button class="action-btn save" aria-label="Save category name" on:click={submitEdit} disabled={busy}>✓</button>
 			<button class="action-btn cancel" aria-label="Cancel category rename" on:click={cancelEdit} disabled={busy}>✕</button>
 		{:else}
+			<span class="color-swatch" style={`background-color: ${node.color}`}></span>
 			<span class="node-name" class:root-name={isRoot}>{node.name}</span>
 			<div class="actions">
 				<button class="action-btn add" title="Add subcategory" aria-label="Add subcategory" on:click={startAdd} disabled={busy}>
@@ -152,6 +181,26 @@
 				on:keydown={(e) => {
 					if (e.key === 'Enter') submitAdd();
 					if (e.key === 'Escape') cancelAdd();
+				}}
+				disabled={busy}
+			/>
+			<input
+				class="inline-input color-input"
+				aria-label="Category color"
+				placeholder="#0f0f0f"
+				bind:value={newColor}
+				on:input={(e) => {
+					newPickerColor = (e.currentTarget as HTMLInputElement).value;
+				}}
+				disabled={busy}
+			/>
+			<input
+				class="picker"
+				type="color"
+				aria-label="Pick category color"
+				bind:value={newPickerColor}
+				on:input={(e) => {
+					newColor = (e.currentTarget as HTMLInputElement).value;
 				}}
 				disabled={busy}
 			/>
@@ -204,6 +253,14 @@
 	.toggle-placeholder {
 		display: inline-block;
 		width: 1rem;
+		flex-shrink: 0;
+	}
+
+	.color-swatch {
+		width: 0.75rem;
+		height: 0.75rem;
+		border-radius: 999px;
+		border: 1px solid var(--border, rgba(128, 128, 128, 0.25));
 		flex-shrink: 0;
 	}
 
@@ -268,6 +325,18 @@
 		border-radius: 0.3rem;
 		background: var(--bg-card);
 		color: inherit;
+	}
+
+	.color-input {
+		max-width: 8rem;
+	}
+
+	.picker {
+		width: 2.25rem;
+		height: 2rem;
+		padding: 0;
+		border: none;
+		background: transparent;
 	}
 
 	.add-form {

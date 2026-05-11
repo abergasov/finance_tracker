@@ -22,6 +22,7 @@ var (
 		"user_id",
 		"parent_id",
 		"name",
+		"color",
 	}
 	tableCategoryExpensesStr = strings.Join(tableCategoryExpensesCols, ",")
 )
@@ -43,23 +44,29 @@ func (r *Repo) LoadUserExpense(ctx context.Context, userID uuid.UUID, expenseID 
 // SELECT+INSERT pattern.
 func (r *Repo) EnsureRootCategories(ctx context.Context, userID uuid.UUID) error {
 	for _, name := range []string{"mandatory", "optional"} {
+		color := utils.DeriveHexColor(name)
 		q := fmt.Sprintf(`
-			INSERT INTO %s (user_id, name)
-			VALUES ($1, $2)
+			INSERT INTO %s (user_id, name, color)
+			VALUES ($1, $2, $3)
 			ON CONFLICT (user_id, name) WHERE parent_id IS NULL DO NOTHING`,
 			TableCategoryExpenses)
-		if _, err := r.db.Client().ExecContext(ctx, q, userID, name); err != nil {
+		if _, err := r.db.Client().ExecContext(ctx, q, userID, name, color); err != nil {
 			return fmt.Errorf("ensure root category %q: %w", name, err)
 		}
 	}
 	return nil
 }
 
-func (r *Repo) SaveUserExpenses(ctx context.Context, userID uuid.UUID, parent *int64, name string) (int64, error) {
+func (r *Repo) SaveUserExpenses(ctx context.Context, userID uuid.UUID, parent *int64, name, color string) (int64, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return 0, errors.New("name is required")
 	}
+	normalizedColor, ok := utils.NormalizeHexColor(color)
+	if !ok {
+		return 0, errors.New("color is invalid")
+	}
+
 	// Verify the parent belongs to this user before inserting.
 	if parent != nil {
 		if expense, err := r.LoadUserExpense(ctx, userID, *parent); err != nil || expense == nil {
@@ -72,7 +79,8 @@ func (r *Repo) SaveUserExpenses(ctx context.Context, userID uuid.UUID, parent *i
 			Int64: utils.FromPointer(parent),
 			Valid: parent != nil,
 		},
-		"name": name,
+		"name":  name,
+		"color": normalizedColor,
 	})
 	q += " RETURNING id"
 	id, err := utils.QueryRowPrimitive[int64](ctx, r.db.Client(), q, p...)
@@ -86,13 +94,17 @@ func (r *Repo) SaveUserExpenses(ctx context.Context, userID uuid.UUID, parent *i
 }
 
 // UpdateUserExpense renames a category
-func (r *Repo) UpdateUserExpense(ctx context.Context, userID uuid.UUID, id int64, name string) error {
+func (r *Repo) UpdateUserExpense(ctx context.Context, userID uuid.UUID, id int64, name, color string) error {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return errors.New("name is required")
 	}
-	q := fmt.Sprintf("UPDATE %s SET name = $1, updated_at = now() WHERE id = $2 AND user_id = $3 AND parent_id IS NOT NULL", TableCategoryExpenses)
-	_, err := r.db.Client().ExecContext(ctx, q, name, id, userID)
+	normalizedColor, ok := utils.NormalizeHexColor(color)
+	if !ok {
+		return errors.New("color is invalid")
+	}
+	q := fmt.Sprintf("UPDATE %s SET name = $1, color = $2, updated_at = now() WHERE id = $3 AND user_id = $4 AND parent_id IS NOT NULL", TableCategoryExpenses)
+	_, err := r.db.Client().ExecContext(ctx, q, name, normalizedColor, id, userID)
 	return err
 }
 
