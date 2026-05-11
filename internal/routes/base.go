@@ -78,6 +78,7 @@ func (s *Router) initRoutes() {
 		return ctx.Next()
 	})
 	auth.Get("/me", withUserID(s.handleCurrentUser))
+	auth.Put("/me/currency", withUserID(s.handleUpdateUserCurrency))
 	auth.Post("/category", withUserID(s.handleCreateCategory))
 	auth.Put("/category/:id<int>", withUserID(s.handleUpdateCategory))
 	auth.Delete("/category/:id<int>", withUserID(s.handleDeleteCategory))

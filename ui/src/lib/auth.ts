@@ -5,6 +5,7 @@ export type AuthUser = {
 	email: string;
 	locale: string;
 	name: string;
+	default_currency: string;
 };
 
 export type AuthSession = {
@@ -60,6 +61,7 @@ export function buildGoogleLoginURL(): string {
 
 export type CurrentUserResult = {
 	user: AuthUser;
+	supportedCurrencies: string[];
 	categories: UserExpenses | null;
 };
 
@@ -82,12 +84,14 @@ export async function fetchCurrentUser(token: string): Promise<FetchCurrentUserO
 
 	const data = (await response.json()) as {
 		user: AuthUser;
+		supported_currencies: string[];
 		user_expenses_categories: UserExpenses | null;
 	};
 	return {
 		ok: true,
 		data: {
 			user: data.user,
+			supportedCurrencies: data.supported_currencies ?? [],
 			categories: data.user_expenses_categories ?? null,
 		},
 	};
@@ -138,6 +142,30 @@ export async function deleteCategory(token: string, id: number): Promise<boolean
 		},
 	});
 	return response.ok;
+}
+
+export type UpdateCurrencyError = "auth" | "error";
+
+export type UpdateCurrencyOutcome = { ok: true } | { ok: false; errorKind: UpdateCurrencyError };
+
+export async function updateDefaultCurrency(token: string, currency: string): Promise<UpdateCurrencyOutcome> {
+	try {
+		const response = await fetch(buildBackendURL("/api/v1/me/currency"), {
+			method: "PUT",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ currency }),
+		});
+		if (!response.ok) {
+			const isAuthError = response.status === 401 || response.status === 403;
+			return { ok: false, errorKind: isAuthError ? "auth" : "error" };
+		}
+		return { ok: true };
+	} catch {
+		return { ok: false, errorKind: "error" };
+	}
 }
 
 function ensureTrailingSlash(value: string): string {

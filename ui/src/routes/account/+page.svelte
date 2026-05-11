@@ -5,6 +5,7 @@
 		fetchCurrentUser,
 		loadSession,
 		saveSession,
+		updateDefaultCurrency,
 		type AuthSession,
 		type UserExpenses,
 	} from "$lib/auth";
@@ -13,6 +14,11 @@
 	let loading = true;
 	let session: AuthSession | null = null;
 	let categories: UserExpenses | null = null;
+	let supportedCurrencies: string[] = [];
+	let selectedCurrency = "";
+	let currencySaving = false;
+	let currencyError = "";
+	let currencySaved = false;
 	let error = "";
 
 	onMount(async () => {
@@ -39,6 +45,8 @@
 			user: result.data.user,
 		};
 		categories = result.data.categories;
+		supportedCurrencies = result.data.supportedCurrencies;
+		selectedCurrency = result.data.user.default_currency || "USD";
 		saveSession(session);
 		loading = false;
 	});
@@ -50,9 +58,41 @@
 			const result = await fetchCurrentUser(session.token);
 			if (result.ok) {
 				categories = result.data.categories;
+				session = { token: session.token, user: result.data.user };
+				saveSession(session);
 			}
 		} catch {
 			error = "Unable to refresh categories right now. Please try again.";
+		}
+	}
+
+	async function saveCurrency(): Promise<void> {
+		if (!session || currencySaving) return;
+		currencySaving = true;
+		currencyError = "";
+		currencySaved = false;
+
+		try {
+			const result = await updateDefaultCurrency(session.token, selectedCurrency);
+			if (result.ok) {
+				session = {
+					token: session.token,
+					user: { ...session.user, default_currency: selectedCurrency },
+				};
+				saveSession(session);
+				currencySaved = true;
+				setTimeout(() => (currencySaved = false), 2000);
+			} else if (result.errorKind === "auth") {
+				clearSession();
+				session = null;
+				error = "Your session expired. Sign in again.";
+			} else {
+				currencyError = "Failed to save currency. Please try again.";
+			}
+		} catch {
+			currencyError = "Failed to save currency. Please try again.";
+		} finally {
+			currencySaving = false;
 		}
 	}
 </script>
@@ -71,11 +111,33 @@
 	<div class="shell">
 		<div class="card">
 			<p class="eyebrow">Account</p>
-			<h1>Expense categories</h1>
+			<h1>Settings</h1>
 			<a class="back-link" href="/">← Back to home</a>
 		</div>
 
+		<div class="card">
+			<h2 class="section-title">Default currency</h2>
+			<p class="muted">Used as the default when recording expenses.</p>
+			<div class="currency-row">
+				<select bind:value={selectedCurrency} disabled={currencySaving} class="currency-select">
+					{#each supportedCurrencies as code}
+						<option value={code}>{code}</option>
+					{/each}
+				</select>
+				<button class="button" on:click={saveCurrency} disabled={currencySaving}>
+					{currencySaving ? "Saving…" : "Save"}
+				</button>
+			</div>
+			{#if currencySaved}
+				<p class="success">Saved.</p>
+			{/if}
+			{#if currencyError}
+				<p class="error">{currencyError}</p>
+			{/if}
+		</div>
+
 		<div class="card categories-card">
+			<h2 class="section-title">Expense categories</h2>
 			{#if !categories || (!categories.mandatoryExpenses?.id && !categories.optionalExpenses?.id)}
 				<p class="muted">No categories yet.</p>
 			{:else}
@@ -105,7 +167,7 @@
 		<div class="card">
 			<p class="eyebrow">Account</p>
 			<h1>Not signed in</h1>
-			<p>Please sign in to manage your categories.</p>
+			<p>Please sign in to manage your account.</p>
 			<a class="button" href="/">← Back to home</a>
 			{#if error}
 				<p class="error">{error}</p>
@@ -149,6 +211,12 @@
 		font-size: 2rem;
 	}
 
+	.section-title {
+		margin: 0 0 0.5rem;
+		font-size: 1rem;
+		font-weight: 600;
+	}
+
 	p {
 		margin: 0 0 1rem;
 	}
@@ -186,6 +254,34 @@
 		font: inherit;
 		text-decoration: none;
 		cursor: pointer;
+	}
+
+	.button:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	.currency-row {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		margin-top: 0.75rem;
+	}
+
+	.currency-select {
+		flex: 1;
+		padding: 0.6rem 0.75rem;
+		border-radius: 0.5rem;
+		border: 1px solid var(--border, #ccc);
+		background: var(--bg-input, var(--bg-card));
+		color: inherit;
+		font: inherit;
+	}
+
+	.success {
+		color: var(--success, #22c55e);
+		margin-top: 0.5rem;
+		font-size: 0.9rem;
 	}
 
 	.error {

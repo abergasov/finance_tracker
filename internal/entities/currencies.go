@@ -2,6 +2,7 @@ package entities
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -367,6 +368,7 @@ func init() {
 	for i := range knownCurrency {
 		KnownCurrencies = append(KnownCurrencies, i)
 	}
+	sort.Strings(KnownCurrencies)
 }
 
 func (c Currency) String() string {

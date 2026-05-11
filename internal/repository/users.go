@@ -20,6 +20,7 @@ var (
 		"u_id",
 		"email",
 		"user_name",
+		"default_currency",
 	}
 	tableUsersColsStr = strings.Join(tableUsersCols, ",")
 )
@@ -47,4 +48,12 @@ func (r *Repo) GetUserByID(ctx context.Context, id uuid.UUID) (*entities.User, e
 func (r *Repo) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
 	q := fmt.Sprintf("SELECT %s FROM %s WHERE email = $1", tableUsersColsStr, TableUsers)
 	return utils.QueryRowToStruct[entities.User](ctx, r.db.Client(), q, email)
+}
+
+func (r *Repo) UpdateUserDefaultCurrency(ctx context.Context, id uuid.UUID, currency string) error {
+	q, p := utils.GenerateUpdateSQL(TableUsers, map[string]any{"default_currency": currency, "updated_at": time.Now()}, map[string]any{"u_id": id})
+	if _, err := r.db.Client().ExecContext(ctx, q, p...); err != nil {
+		return fmt.Errorf("failed to update default currency: %w", err)
+	}
+	return nil
 }

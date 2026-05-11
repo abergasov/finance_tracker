@@ -25,6 +25,14 @@ func (s *Service) ServeHomePage(ctx context.Context, token string) (*entities.Ho
 	if err != nil {
 		return nil, err
 	}
+
+	// Load DB user to populate default_currency (not stored in JWT).
+	dbUser, err := s.repo.GetUserByID(ctx, uID)
+	if err != nil {
+		return nil, err
+	}
+	usr.DefaultCurrency = dbUser.DefaultCurrency
+
 	userCategories, ok := usrExpensesCategories.Load(uID)
 	if !ok {
 		userCategories, err = s.buildUserExpensesCategories(ctx, uID)
