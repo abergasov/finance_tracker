@@ -4,6 +4,7 @@ import (
 	"finance_tracker/internal/entities"
 	testhelpers "finance_tracker/internal/test_helpers"
 	"finance_tracker/internal/test_helpers/seed"
+	"finance_tracker/internal/utils"
 	"fmt"
 	"net/http"
 	"testing"
@@ -37,6 +38,15 @@ func TestCategoryCRUDRoutes(t *testing.T) {
 			require.Empty(t, homeAfter.UserExpensesCategories.MandatoryExpenses.Children)
 			require.Empty(t, homeAfter.UserExpensesCategories.OptionalExpenses.Children)
 		})
+		t.Run("should reject invalid color", func(t *testing.T) {
+			var payload map[string]string
+			srv.Post(t, "/api/v1/category", map[string]any{
+				"parent_id": mandatoryID,
+				"name":      "decor",
+				"color":     "nope",
+			}).RequireBadRequest(t).RequireUnmarshal(t, &payload)
+			require.Equal(t, "color must be a hex value like #0f0f0f", payload["error"])
+		})
 		// when
 		srv.Post(t, "/api/v1/category", map[string]any{
 			"parent_id": mandatoryID,
@@ -48,6 +58,7 @@ func TestCategoryCRUDRoutes(t *testing.T) {
 		created := loadHomePage(t, srv).UserExpensesCategories.MandatoryExpenses.FindCategoryByID(createResp.ID)
 		require.NotNil(t, created)
 		require.Equal(t, "groceries", created.Name)
+		require.Equal(t, utils.DeriveHexColor("groceries"), created.Color)
 		t.Run("should reject on name duplicate", func(t *testing.T) {
 			var payload map[string]string
 			srv.Post(t, "/api/v1/category", map[string]any{
@@ -70,16 +81,27 @@ func TestCategoryCRUDRoutes(t *testing.T) {
 			created := homeAfter.UserExpensesCategories.MandatoryExpenses.FindCategoryByID(createResp.ID)
 			require.NotNil(t, created)
 			require.Equal(t, "groceries", created.Name)
+			require.Equal(t, utils.DeriveHexColor("groceries"), created.Color)
+		})
+		t.Run("should reject invalid color", func(t *testing.T) {
+			var payload map[string]string
+			srv.Put(t, fmt.Sprintf("/api/v1/category/%d", createResp.ID), map[string]any{
+				"name":  "groceries",
+				"color": "bad-color",
+			}).RequireBadRequest(t).RequireUnmarshal(t, &payload)
+			require.Equal(t, "color must be a hex value like #0f0f0f", payload["error"])
 		})
 		// when
 		srv.Put(t, fmt.Sprintf("/api/v1/category/%d", createResp.ID), map[string]any{
-			"name": "groceries-renamed",
+			"name":  "groceries-renamed",
+			"color": "#112233",
 		}).RequireOk(t)
 
 		// then
 		created := loadHomePage(t, srv).UserExpensesCategories.MandatoryExpenses.FindCategoryByID(createResp.ID)
 		require.NotNil(t, created)
 		require.Equal(t, "groceries-renamed", created.Name)
+		require.Equal(t, "#112233", created.Color)
 	})
 
 	t.Run("should able to delete category", func(t *testing.T) {
@@ -137,6 +159,7 @@ func TestCategoryRouteTrimsPersistedNames(t *testing.T) {
 	created := homeAfter.UserExpensesCategories.MandatoryExpenses.FindCategoryByID(createResp.ID)
 	require.NotNil(t, created)
 	require.Equal(t, "foo", created.Name)
+	require.Equal(t, utils.DeriveHexColor("foo"), created.Color)
 }
 
 func TestCategoryRouteRejectsRenameConflict(t *testing.T) {
@@ -171,6 +194,8 @@ func TestCategoryRouteRejectsRenameConflict(t *testing.T) {
 	require.NotNil(t, second)
 	require.Equal(t, "alpha", first.Name)
 	require.Equal(t, "beta", second.Name)
+	require.Equal(t, utils.DeriveHexColor("alpha"), first.Color)
+	require.Equal(t, utils.DeriveHexColor("beta"), second.Color)
 }
 
 func TestCategoryRouteReturnsNotFoundForMissingCategory(t *testing.T) {
@@ -214,6 +239,8 @@ func TestCategoryRouteRejectsRootMutations(t *testing.T) {
 	home := loadHomePage(t, srv)
 	mandatoryID := home.UserExpensesCategories.MandatoryExpenses.ID
 	optionalID := home.UserExpensesCategories.OptionalExpenses.ID
+	require.Equal(t, utils.DeriveHexColor("mandatory"), home.UserExpensesCategories.MandatoryExpenses.Color)
+	require.Equal(t, utils.DeriveHexColor("optional"), home.UserExpensesCategories.OptionalExpenses.Color)
 
 	t.Run("reject root update", func(t *testing.T) {
 		// when
@@ -224,6 +251,7 @@ func TestCategoryRouteRejectsRootMutations(t *testing.T) {
 		// then
 		catID := loadHomePage(t, srv).UserExpensesCategories.MandatoryExpenses.FindCategoryByID(mandatoryID)
 		require.Equal(t, catID.ID, mandatoryID)
+		require.Equal(t, utils.DeriveHexColor("mandatory"), catID.Color)
 	})
 
 	t.Run("reject root delete", func(t *testing.T) {
@@ -233,6 +261,7 @@ func TestCategoryRouteRejectsRootMutations(t *testing.T) {
 		// then
 		catID := loadHomePage(t, srv).UserExpensesCategories.OptionalExpenses.FindCategoryByID(optionalID)
 		require.Equal(t, catID.ID, optionalID)
+		require.Equal(t, utils.DeriveHexColor("optional"), catID.Color)
 	})
 }
 

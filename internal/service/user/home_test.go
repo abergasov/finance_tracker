@@ -21,29 +21,32 @@ func TestBuildUserExpensesTree(t *testing.T) {
 	}{
 		"success": {
 			rows: []*entities.UserExpensesCategoryDB{
-				{ID: 1, Name: "mandatory"},
-				{ID: 2, Name: "rent", ParentID: sql.NullInt64{Int64: 1, Valid: true}},
-				{ID: 3, Name: "optional"},
-				{ID: 4, Name: "travel", ParentID: sql.NullInt64{Int64: 3, Valid: true}},
-				{ID: 5, Name: "hotel", ParentID: sql.NullInt64{Int64: 4, Valid: true}},
+				{ID: 1, Name: "mandatory", Color: "#111111"},
+				{ID: 2, Name: "rent", Color: "#222222", ParentID: sql.NullInt64{Int64: 1, Valid: true}},
+				{ID: 3, Name: "optional", Color: "#333333"},
+				{ID: 4, Name: "travel", Color: "#444444", ParentID: sql.NullInt64{Int64: 3, Valid: true}},
+				{ID: 5, Name: "hotel", Color: "#555555", ParentID: sql.NullInt64{Int64: 4, Valid: true}},
 			},
 			want: &entities.UserExpenses{
 				MandatoryExpenses: entities.UserExpensesCategory{
-					ID:   1,
-					Name: "mandatory",
+					ID:    1,
+					Color: "#111111",
+					Name:  "mandatory",
 					Children: []*entities.UserExpensesCategory{
-						{ID: 2, Name: "rent"},
+						{ID: 2, Color: "#222222", Name: "rent"},
 					},
 				},
 				OptionalExpenses: entities.UserExpensesCategory{
-					ID:   3,
-					Name: "optional",
+					ID:    3,
+					Color: "#333333",
+					Name:  "optional",
 					Children: []*entities.UserExpensesCategory{
 						{
-							ID:   4,
-							Name: "travel",
+							ID:    4,
+							Color: "#444444",
+							Name:  "travel",
 							Children: []*entities.UserExpensesCategory{
-								{ID: 5, Name: "hotel"},
+								{ID: 5, Color: "#555555", Name: "hotel"},
 							},
 						},
 					},
@@ -165,6 +168,8 @@ func TestServeHomePageSeedsRootCategories(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "mandatory", homeData.UserExpensesCategories.MandatoryExpenses.Name)
 	require.Equal(t, "optional", homeData.UserExpensesCategories.OptionalExpenses.Name)
+	require.Equal(t, utils.DeriveHexColor("mandatory"), homeData.UserExpensesCategories.MandatoryExpenses.Color)
+	require.Equal(t, utils.DeriveHexColor("optional"), homeData.UserExpensesCategories.OptionalExpenses.Color)
 	require.Empty(t, homeData.UserExpensesCategories.MandatoryExpenses.Children)
 	require.Empty(t, homeData.UserExpensesCategories.OptionalExpenses.Children)
 

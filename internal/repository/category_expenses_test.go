@@ -19,15 +19,29 @@ func TestCategoryExpenses(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, expensesList)
 
-	parentID, err := container.Repo.SaveUserExpenses(container.Ctx, user.ID, nil, uuid.NewString())
+	parentName := uuid.NewString()
+	parentColor := "#112233"
+	parentID, err := container.Repo.SaveUserExpenses(container.Ctx, user.ID, nil, parentName, parentColor)
 	require.NoError(t, err)
-	_, err = container.Repo.SaveUserExpenses(container.Ctx, user.ID, &parentID, uuid.NewString())
+	childName := uuid.NewString()
+	_, err = container.Repo.SaveUserExpenses(container.Ctx, user.ID, &parentID, childName, utils.DeriveHexColor(childName))
 	require.NoError(t, err)
 
 	// when
 	expensesList, err = container.Repo.LoadAllUserExpenses(container.Ctx, user.ID)
 	require.NoError(t, err)
 	require.Len(t, expensesList, 2)
+	require.ElementsMatch(t, []string{parentName, childName}, utils.StringsFromObjectSlice(expensesList, func(db *entities.UserExpensesCategoryDB) string {
+		return db.Name
+	}))
+	for _, row := range expensesList {
+		switch row.Name {
+		case parentName:
+			require.Equal(t, parentColor, row.Color)
+		case childName:
+			require.Equal(t, utils.DeriveHexColor(childName), row.Color)
+		}
+	}
 }
 
 func TestEnsureRootCategoriesIsIdempotent(t *testing.T) {
@@ -41,6 +55,9 @@ func TestEnsureRootCategoriesIsIdempotent(t *testing.T) {
 		rows, err := container.Repo.LoadAllUserExpenses(container.Ctx, usr.ID)
 		require.NoError(t, err)
 		require.Len(t, rows, 2)
+		for _, row := range rows {
+			require.Equal(t, utils.DeriveHexColor(row.Name), row.Color)
+		}
 
 		roots := rootCategoryIDs(t, rows)
 		if i == 0 {
@@ -54,7 +71,7 @@ func TestEnsureRootCategoriesIsIdempotent(t *testing.T) {
 		roots := rootCategoryIDs(t, mustLoadCategories(t, container, usr.ID))
 
 		// when
-		require.NoError(t, container.Repo.UpdateUserExpense(container.Ctx, usr.ID, roots["mandatory"], uuid.NewString()))
+		require.NoError(t, container.Repo.UpdateUserExpense(container.Ctx, usr.ID, roots["mandatory"], uuid.NewString(), "#abcdef"))
 		require.NoError(t, container.Repo.DeleteUserExpense(container.Ctx, usr.ID, roots["optional"]))
 
 		// then
@@ -73,11 +90,11 @@ func TestDeleteUserExpenseCascadesDescendants(t *testing.T) {
 	mandatoryParentID := roots["mandatory"]
 	optionalParentID := roots["optional"]
 
-	branchID, err := container.Repo.SaveUserExpenses(container.Ctx, usr.ID, &mandatoryParentID, "household")
+	branchID, err := container.Repo.SaveUserExpenses(container.Ctx, usr.ID, &mandatoryParentID, "household", utils.DeriveHexColor("household"))
 	require.NoError(t, err)
-	childID, err := container.Repo.SaveUserExpenses(container.Ctx, usr.ID, &branchID, "utilities")
+	childID, err := container.Repo.SaveUserExpenses(container.Ctx, usr.ID, &branchID, "utilities", utils.DeriveHexColor("utilities"))
 	require.NoError(t, err)
-	_, err = container.Repo.SaveUserExpenses(container.Ctx, usr.ID, &optionalParentID, "travel")
+	_, err = container.Repo.SaveUserExpenses(container.Ctx, usr.ID, &optionalParentID, "travel", utils.DeriveHexColor("travel"))
 	require.NoError(t, err)
 
 	require.NoError(t, container.Repo.DeleteUserExpense(container.Ctx, usr.ID, branchID))
@@ -92,6 +109,26 @@ func TestDeleteUserExpenseCascadesDescendants(t *testing.T) {
 		require.NotEqual(t, branchID, row.ID)
 		require.NotEqual(t, childID, row.ID)
 	}
+}
+
+func TestUpdateUserExpensePersistsExplicitColor(t *testing.T) {
+	container := testhelpers.GetClean(t)
+	usr := seed.NewUserBuilder().PopulateTest(t, container.Repo)
+
+	require.NoError(t, container.Repo.EnsureRootCategories(container.Ctx, usr.ID))
+	roots := rootCategoryIDs(t, mustLoadCategories(t, container, usr.ID))
+	mandatoryParentID := roots["mandatory"]
+
+	branchID, err := container.Repo.SaveUserExpenses(container.Ctx, usr.ID, &mandatoryParentID, "household", utils.DeriveHexColor("household"))
+	require.NoError(t, err)
+
+	require.NoError(t, container.Repo.UpdateUserExpense(container.Ctx, usr.ID, branchID, "household-renamed", "#abcdef"))
+
+	rows := mustLoadCategories(t, container, usr.ID)
+	updated := findCategoryByID(t, rows, branchID)
+	require.NotNil(t, updated)
+	require.Equal(t, "household-renamed", updated.Name)
+	require.Equal(t, "#abcdef", updated.Color)
 }
 
 func mustLoadCategories(t *testing.T, container *testhelpers.TestContainer, userID uuid.UUID) []*entities.UserExpensesCategoryDB {
@@ -112,4 +149,15 @@ func rootCategoryIDs(t *testing.T, rows []*entities.UserExpensesCategoryDB) map[
 	}
 	require.Len(t, roots, 2)
 	return roots
+}
+
+func findCategoryByID(t *testing.T, rows []*entities.UserExpensesCategoryDB, id int64) *entities.UserExpensesCategoryDB {
+	t.Helper()
+
+	for _, row := range rows {
+		if row.ID == id {
+			return row
+		}
+	}
+	return nil
 }

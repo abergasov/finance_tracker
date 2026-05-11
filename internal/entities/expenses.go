@@ -25,6 +25,7 @@ type UserExpenses struct {
 
 type UserExpensesCategory struct {
 	ID       int64                   `db:"id" json:"id"`
+	Color    string                  `db:"color" json:"color"`
 	Children []*UserExpensesCategory `json:"children,omitempty"`
 	Name     string                  `json:"name"`
 }
@@ -49,6 +50,7 @@ type UserExpensesCategoryDB struct {
 	UserID    uuid.UUID     `db:"user_id" json:"userId"`
 	ParentID  sql.NullInt64 `db:"parent_id" json:"parentId"`
 	Name      string        `db:"name" json:"name"`
+	Color     string        `db:"color" json:"color"`
 	CreatedAt time.Time     `db:"created_at" json:"-"`
 	UpdatedAt time.Time     `db:"updated_at" json:"-"`
 }

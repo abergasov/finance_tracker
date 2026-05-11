@@ -23,11 +23,12 @@ CREATE INDEX currency_rates_timestamp_idx ON currency_rates (timestamp DESC);
 create table category_expenses
 (
     id         BIGSERIAL PRIMARY KEY,
-    user_id    UUID                                    not null,
+    user_id    UUID                                    NOT NULL,
     parent_id  BIGINT REFERENCES category_expenses(id) on delete cascade,
-    name       TEXT                                    not null,
-    created_at timestamp with time zone default now()  not null,
-    updated_at timestamp with time zone default now()  not null,
+    name       TEXT                                    NOT NULL,
+    color      TEXT                                    NOT NULL,
+    created_at timestamp with time zone default now()  NOT NULL,
+    updated_at timestamp with time zone default now()  NOT NULL,
     unique (user_id, parent_id, name)
 );
 
