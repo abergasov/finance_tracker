@@ -1,7 +1,9 @@
 <script lang="ts">
 	import ThemeSwitcher from "$lib/ThemeSwitcher.svelte";
+	import HamburgerMenu from "$lib/HamburgerMenu.svelte";
 </script>
 
+<HamburgerMenu />
 <ThemeSwitcher />
 <slot />
 
