@@ -33,6 +33,7 @@
 				email,
 				name: hashParams.get("name") ?? "",
 				locale: hashParams.get("locale") ?? "",
+				default_currency: hashParams.get("default_currency") ?? "USD",
 			},
 		});
 		await goto("/");
