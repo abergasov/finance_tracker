@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { createExpense, type ExpensesCategory, type UserExpenses } from '$lib/auth';
 
 	export let open: boolean = false;
@@ -37,13 +38,33 @@
 	let amount: string = '';
 	let submitting = false;
 	let error = '';
+	let dialogEl: HTMLDivElement | null = null;
+	let previouslyFocusedEl: HTMLElement | null = null;
+	let wasOpen = false;
 
-	$: if (open) {
+	async function focusDialog() {
+		await tick();
+		const firstFocusable = dialogEl?.querySelector<HTMLElement>('select, input, button');
+		(firstFocusable ?? dialogEl)?.focus();
+	}
+
+	$: if (open && !wasOpen) {
+		wasOpen = true;
+		previouslyFocusedEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
 		// Reset form each time the modal opens.
 		selectedCategoryId = flatCategories.length > 0 ? flatCategories[0].id : 0;
 		selectedCurrency = defaultCurrency || 'USD';
 		amount = '';
 		error = '';
+
+		focusDialog();
+	}
+
+	$: if (!open && wasOpen) {
+		wasOpen = false;
+		previouslyFocusedEl?.focus();
+		previouslyFocusedEl = null;
 	}
 
 	async function handleSubmit() {
@@ -75,27 +96,30 @@
 		onClose();
 	}
 
-	function handleBackdropClick(e: MouseEvent) {
-		if (e.target === e.currentTarget) onClose();
+	function handleWindowPointerDown(e: PointerEvent) {
+		if (!open || dialogEl === null) return;
+		if (!dialogEl.contains(e.target as Node)) onClose();
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
+		if (!open) return;
 		if (e.key === 'Escape') onClose();
 	}
 </script>
 
+<svelte:window on:keydown={handleKeydown} on:pointerdown={handleWindowPointerDown} />
+
 {#if open}
-	<div
-		class="backdrop"
-		role="dialog"
-		tabindex="-1"
-		aria-modal="true"
-		aria-label="Add expense"
-		on:click={handleBackdropClick}
-		on:keydown={handleKeydown}
-	>
-		<div class="modal">
-			<h2 class="modal-title">Add expense</h2>
+	<div class="backdrop">
+		<div
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="add-expense-title"
+			tabindex="-1"
+			bind:this={dialogEl}
+		>
+			<h2 class="modal-title" id="add-expense-title">Add expense</h2>
 
 			<label class="field-label" for="expense-category">Category</label>
 			{#if flatCategories.length === 0}
