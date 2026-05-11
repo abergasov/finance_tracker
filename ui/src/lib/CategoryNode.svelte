@@ -18,9 +18,14 @@
 	let newPickerColor = '#000000';
 	let busy = false;
 	let nodeError = '';
+	const HEX_COLOR_PATTERN = '[#][0-9a-fA-F]{6}';
+	const HEX_COLOR_MAX_LENGTH = 7;
+	const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
+	const COLOR_FORMAT_ERROR = 'Color must be in #RRGGBB format.';
+	const EDIT_COLOR_ERROR_ID = 'edit-color-format-error';
 
 	function isHexColor(value: string): boolean {
-		return /^#[0-9a-fA-F]{6}$/.test(value);
+		return HEX_COLOR_REGEX.test(value);
 	}
 
 	function isEmptyOrHexColor(value: string): boolean {
@@ -44,7 +49,6 @@
 	async function submitEdit() {
 		if (!editName.trim()) return;
 		if (!isEmptyOrHexColor(editColor)) {
-			nodeError = 'Color must be in #RRGGBB format.';
 			return;
 		}
 		busy = true;
@@ -101,6 +105,7 @@
 
 	$: hasChildren = node.children && node.children.length > 0;
 	$: isEditColorValid = isEmptyOrHexColor(editColor);
+	$: editColorValidationError = editMode && !isEditColorValid ? COLOR_FORMAT_ERROR : '';
 </script>
 
 <div class="node" class:root={isRoot}>
@@ -133,10 +138,11 @@
 				aria-label="Category color"
 				placeholder="#0f0f0f"
 				bind:value={editColor}
-				pattern="^#[0-9a-fA-F]{6}$"
-				maxlength="7"
+				pattern={HEX_COLOR_PATTERN}
+				maxlength={HEX_COLOR_MAX_LENGTH}
+				aria-describedby={!isEditColorValid ? EDIT_COLOR_ERROR_ID : undefined}
 				on:input={(e) => {
-					const value = (e.currentTarget as HTMLInputElement).value.trim();
+					const value = (e.currentTarget as HTMLInputElement).value;
 					if (isHexColor(value)) {
 						editPickerColor = value;
 					}
@@ -153,7 +159,15 @@
 				}}
 				disabled={busy}
 			/>
-			<button class="action-btn save" aria-label="Save category name" on:click={submitEdit} disabled={busy || !isEditColorValid}>✓</button>
+			<button
+				class="action-btn save"
+				aria-label="Save category"
+				aria-describedby={editColorValidationError ? EDIT_COLOR_ERROR_ID : undefined}
+				on:click={submitEdit}
+				disabled={busy || !isEditColorValid}
+			>
+				✓
+			</button>
 			<button class="action-btn cancel" aria-label="Cancel category rename" on:click={cancelEdit} disabled={busy}>✕</button>
 		{:else}
 			<span class="color-swatch" aria-hidden="true" style={`background-color: ${node.color}`}></span>
@@ -186,7 +200,11 @@
 		{/if}
 	</div>
 
-	{#if nodeError}
+	{#if editColorValidationError}
+		<p id={EDIT_COLOR_ERROR_ID} class="node-error">{editColorValidationError}</p>
+	{/if}
+
+	{#if nodeError && !editColorValidationError}
 		<p class="node-error">{nodeError}</p>
 	{/if}
 
