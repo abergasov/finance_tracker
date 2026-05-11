@@ -32,7 +32,7 @@ func ParseAmountToMinor(s string) (int64, error) {
 	minor := int64(0)
 	if len(parts) == 2 {
 		frac := parts[1]
-		if len(frac) == 0 || len(frac) > 2 {
+		if frac == "" || len(frac) > 2 {
 			return 0, errors.New("amount may have at most 2 decimal places")
 		}
 		if len(frac) == 1 {
