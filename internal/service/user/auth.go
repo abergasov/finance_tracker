@@ -79,9 +79,10 @@ func (s *Service) CompleteGoogleAuth(ctx context.Context, code string) (*entitie
 	return &entities.AuthSession{
 		Token: sessionToken,
 		User: entities.AuthUser{
-			ID:    user.ID.String(),
-			Email: user.Email,
-			Name:  user.Name,
+			ID:              user.ID.String(),
+			Email:           user.Email,
+			Name:            user.Name,
+			DefaultCurrency: user.DefaultCurrency,
 		},
 	}, nil
 }
@@ -105,6 +106,7 @@ func (s *Service) BuildUICallbackURL(session *entities.AuthSession, authErr erro
 		params.Set("id", session.User.ID)
 		params.Set("email", session.User.Email)
 		params.Set("name", session.User.Name)
+		params.Set("default_currency", session.User.DefaultCurrency)
 	}
 
 	if encoded := params.Encode(); encoded != "" {

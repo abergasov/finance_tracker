@@ -16,6 +16,41 @@ type Querier interface {
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
+// GenerateUpdateSQL generates an UPDATE SQL statement with placeholders and parameters.
+// - tableName: the name of the table to update.
+// - fieldsValuesMapping: a map of column names to new values (the SET clause).
+// - whereFieldsValuesMapping: a map of column names to values for the WHERE clause.
+// Returns the SQL string and a slice of parameters.
+func GenerateUpdateSQL(tableName string, fieldsValuesMapping, whereFieldsValuesMapping map[string]any) (sqlU string, params []any) {
+	if len(fieldsValuesMapping) == 0 {
+		return sqlU, params
+	}
+	setClauses := make([]string, 0, len(fieldsValuesMapping))
+	params = make([]any, 0, len(fieldsValuesMapping)+len(whereFieldsValuesMapping))
+	counter := 1
+
+	// Build SET clauses and collect parameters
+	for k, v := range fieldsValuesMapping {
+		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", k, counter))
+		params = append(params, v)
+		counter++
+	}
+
+	// Build WHERE clauses and collect parameters
+	whereClauses := make([]string, 0, len(whereFieldsValuesMapping))
+	for k, v := range whereFieldsValuesMapping {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = $%d", k, counter))
+		params = append(params, v)
+		counter++
+	}
+	sqlU = fmt.Sprintf("UPDATE %s SET %s", tableName, strings.Join(setClauses, ", "))
+	if len(whereClauses) > 0 {
+		sqlU += fmt.Sprintf(" WHERE %s", strings.Join(whereClauses, " AND "))
+	}
+
+	return sqlU, params
+}
+
 func GenerateInsertSQL(tableName string, fieldsValuesMapping map[string]any) (sqlI string, params []any) {
 	fields := make([]string, 0, len(fieldsValuesMapping))
 	placeholders := make([]string, 0, len(fieldsValuesMapping))

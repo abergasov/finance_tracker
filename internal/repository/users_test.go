@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"finance_tracker/internal/entities"
 	"finance_tracker/internal/test_helpers/seed"
 	"testing"
 
@@ -22,4 +23,5 @@ func TestSaveUserByEmailHandlesDuplicateEmailCaseInsensitively(t *testing.T) {
 
 	require.Equal(t, usr.Email, dbUser.Email)
 	require.Equal(t, usr.Name, dbUser.Name)
+	require.Equal(t, entities.CurrencyUSD.String(), dbUser.DefaultCurrency)
 }

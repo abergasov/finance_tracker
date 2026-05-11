@@ -170,6 +170,7 @@ func TestServeHomePageSeedsRootCategories(t *testing.T) {
 	require.Equal(t, "optional", homeData.UserExpensesCategories.OptionalExpenses.Name)
 	require.Equal(t, utils.DeriveHexColor("mandatory"), homeData.UserExpensesCategories.MandatoryExpenses.Color)
 	require.Equal(t, utils.DeriveHexColor("optional"), homeData.UserExpensesCategories.OptionalExpenses.Color)
+	require.Equal(t, entities.KnownCurrencies, homeData.SupportedCurrencies)
 	require.Empty(t, homeData.UserExpensesCategories.MandatoryExpenses.Children)
 	require.Empty(t, homeData.UserExpensesCategories.OptionalExpenses.Children)
 
