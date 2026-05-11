@@ -20,7 +20,6 @@ const (
 var (
 	signedKey       string
 	ErrInvalidToken = errors.New("invalid token")
-	ErrUserNotFound = errors.New("user not found")
 )
 
 func SetSignedKey(key string) {
