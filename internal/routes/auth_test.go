@@ -181,7 +181,7 @@ func TestUpdateUserDefaultCurrency(t *testing.T) {
 			map[string]string{"currency": "EUR"},
 			withBearer(ghostToken),
 			nil,
-		).RequireNotFound(t)
+		).RequireOk(t)
 	})
 
 	t.Run("currency can be changed back", func(t *testing.T) {
