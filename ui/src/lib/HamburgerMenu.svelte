@@ -5,8 +5,6 @@
 	let open = false;
 	let isSignedIn = false;
 	let menuEl: HTMLDivElement | null = null;
-	let firstItemEl: HTMLAnchorElement | null = null;
-	let lastItemEl: HTMLButtonElement | null = null;
 
 	onMount(() => {
 		isSignedIn = loadSession() !== null;
@@ -21,7 +19,8 @@
 		// Focus first menu item when opening
 		if (open) {
 			setTimeout(() => {
-				firstItemEl?.focus();
+				const firstItem = menuEl?.querySelector<HTMLElement>('[role="menuitem"]');
+				firstItem?.focus();
 			}, 0);
 		}
 	}
@@ -54,26 +53,24 @@
 				menuEl?.querySelector<HTMLButtonElement>(".hamburger-btn")?.focus();
 				break;
 			case "ArrowDown":
-				e.preventDefault();
-				// Move focus to next item or wrap to first
-				if (document.activeElement === firstItemEl) {
-					// Move from first to last (or stay on first if no last item)
-					lastItemEl?.focus() ?? firstItemEl?.focus();
-				} else {
-					// Wrap from last back to first, or default to first
-					firstItemEl?.focus();
-				}
-				break;
 			case "ArrowUp":
 				e.preventDefault();
-				// Move focus to previous item or wrap to last
-				if (document.activeElement === lastItemEl) {
-					// Move from last to first
-					firstItemEl?.focus();
+				// Get all currently visible menu items
+				const menuItems = menuEl?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+				if (!menuItems || menuItems.length === 0) return;
+				
+				const currentIndex = Array.from(menuItems).indexOf(document.activeElement as HTMLElement);
+				let nextIndex: number;
+				
+				if (e.key === "ArrowDown") {
+					// Move to next item, or wrap to first
+					nextIndex = currentIndex < 0 || currentIndex >= menuItems.length - 1 ? 0 : currentIndex + 1;
 				} else {
-					// Wrap from first back to last, or default to last
-					lastItemEl?.focus() ?? firstItemEl?.focus();
+					// Move to previous item, or wrap to last
+					nextIndex = currentIndex <= 0 ? menuItems.length - 1 : currentIndex - 1;
 				}
+				
+				menuItems[nextIndex]?.focus();
 				break;
 		}
 	}
@@ -102,7 +99,6 @@
 				href="/account" 
 				on:click={closeMenu} 
 				role="menuitem"
-				bind:this={firstItemEl}
 			>
 				Account
 			</a>
@@ -111,7 +107,6 @@
 					class="menu-item menu-item--btn" 
 					on:click={signOut} 
 					role="menuitem"
-					bind:this={lastItemEl}
 				>
 					Sign out
 				</button>
