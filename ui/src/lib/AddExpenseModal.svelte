@@ -51,8 +51,8 @@
 	//   1 char   → currencies containing that character (case-insensitive)
 	//   2+ chars → normal case-insensitive substring match
 	$: filteredCurrencies = (() => {
-		if (currencySearch.length === 0) return supportedCurrencies;
-		const q = currencySearch.toLowerCase();
+		const q = currencySearch.trim().toLowerCase();
+		if (q.length === 0) return supportedCurrencies;
 		return supportedCurrencies.filter((c) => c.toLowerCase().includes(q));
 	})();
 
