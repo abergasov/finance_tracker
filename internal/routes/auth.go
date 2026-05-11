@@ -100,9 +100,6 @@ func (s *Router) handleUpdateUserCurrency(ctx fiber.Ctx, userID uuid.UUID) error
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "unsupported currency"})
 	}
 	if err = s.service.UpdateUserDefaultCurrency(ctx.Context(), userID, currency); err != nil {
-		if errors.Is(err, utils.ErrUserNotFound) {
-			return ctx.Status(http.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
-		}
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{"ok": true})

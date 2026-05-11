@@ -52,7 +52,7 @@ func (r *Repo) GetUserByEmail(ctx context.Context, email string) (*entities.User
 
 func (r *Repo) UpdateUserDefaultCurrency(ctx context.Context, id uuid.UUID, currency string) error {
 	q, p := utils.GenerateUpdateSQL(TableUsers, map[string]any{"default_currency": currency, "updated_at": time.Now()}, map[string]any{"u_id": id})
-	if _, err := r.db.Client().ExecContext(ctx, q, p, q, id); err != nil {
+	if _, err := r.db.Client().ExecContext(ctx, q, p...); err != nil {
 		return fmt.Errorf("failed to update default currency: %w", err)
 	}
 	return nil
