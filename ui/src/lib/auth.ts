@@ -149,19 +149,23 @@ export type UpdateCurrencyError = "auth" | "error";
 export type UpdateCurrencyOutcome = { ok: true } | { ok: false; errorKind: UpdateCurrencyError };
 
 export async function updateDefaultCurrency(token: string, currency: string): Promise<UpdateCurrencyOutcome> {
-	const response = await fetch(buildBackendURL("/api/v1/me/currency"), {
-		method: "PUT",
-		headers: {
-			Authorization: `Bearer ${token}`,
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ currency }),
-	});
-	if (!response.ok) {
-		const isAuthError = response.status === 401 || response.status === 403;
-		return { ok: false, errorKind: isAuthError ? "auth" : "error" };
+	try {
+		const response = await fetch(buildBackendURL("/api/v1/me/currency"), {
+			method: "PUT",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ currency }),
+		});
+		if (!response.ok) {
+			const isAuthError = response.status === 401 || response.status === 403;
+			return { ok: false, errorKind: isAuthError ? "auth" : "error" };
+		}
+		return { ok: true };
+	} catch {
+		return { ok: false, errorKind: "error" };
 	}
-	return { ok: true };
 }
 
 function ensureTrailingSlash(value: string): string {
