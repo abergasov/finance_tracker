@@ -13,6 +13,7 @@ type Repo struct {
 }
 
 var AllTables = []string{
+	TableExpenseRecords,
 	TableCategoryExpenses,
 	TableUsers,
 	TableCurrencies,

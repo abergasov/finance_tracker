@@ -82,6 +82,7 @@ func (s *Router) initRoutes() {
 	auth.Post("/category", withUserID(s.handleCreateCategory))
 	auth.Put("/category/:id<int>", withUserID(s.handleUpdateCategory))
 	auth.Delete("/category/:id<int>", withUserID(s.handleDeleteCategory))
+	auth.Post("/expense", withUserID(s.handleCreateExpense))
 }
 
 // Run starts the HTTP Server.

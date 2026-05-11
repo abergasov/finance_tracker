@@ -144,6 +144,40 @@ export async function deleteCategory(token: string, id: number): Promise<boolean
 	return response.ok;
 }
 
+export type CreateExpenseError = "auth" | "error";
+
+export type CreateExpenseOutcome =
+	| { ok: true }
+	| { ok: false; errorKind: CreateExpenseError; error: string };
+
+export async function createExpense(
+	token: string,
+	categoryId: number,
+	currency: string,
+	amount: string,
+): Promise<CreateExpenseOutcome> {
+	try {
+		const response = await fetch(buildBackendURL("/api/v1/expense"), {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ category_id: categoryId, currency, amount }),
+		});
+		if (!response.ok) {
+			if (response.status === 401 || response.status === 403) {
+				return { ok: false, errorKind: "auth", error: "Session expired." };
+			}
+			const data = (await response.json().catch(() => ({}))) as { error?: string };
+			return { ok: false, errorKind: "error", error: data.error ?? "Failed to create expense." };
+		}
+		return { ok: true };
+	} catch {
+		return { ok: false, errorKind: "error", error: "Network error. Please try again." };
+	}
+}
+
 export type UpdateCurrencyError = "auth" | "error";
 
 export type UpdateCurrencyOutcome = { ok: true } | { ok: false; errorKind: UpdateCurrencyError };
