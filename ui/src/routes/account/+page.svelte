@@ -23,18 +23,22 @@
 		}
 
 		const result = await fetchCurrentUser(storedSession.token);
-		if (!result) {
-			clearSession();
-			error = "Your session expired. Sign in again.";
+		if (!result.ok) {
+			if (result.errorKind === "auth") {
+				clearSession();
+				error = "Your session expired. Sign in again.";
+			} else {
+				error = "Could not load your account. Please try again.";
+			}
 			loading = false;
 			return;
 		}
 
 		session = {
 			token: storedSession.token,
-			user: result.user,
+			user: result.data.user,
 		};
-		categories = result.categories;
+		categories = result.data.categories;
 		saveSession(session);
 		loading = false;
 	});
@@ -44,8 +48,8 @@
 
 		try {
 			const result = await fetchCurrentUser(session.token);
-			if (result) {
-				categories = result.categories;
+			if (result.ok) {
+				categories = result.data.categories;
 			}
 		} catch {
 			error = "Unable to refresh categories right now. Please try again.";

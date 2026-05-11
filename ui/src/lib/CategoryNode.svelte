@@ -5,7 +5,7 @@
 	export let node: ExpensesCategory;
 	export let isRoot: boolean = false;
 	export let token: string;
-	export let onRefresh: () => void;
+	export let onRefresh: () => Promise<void>;
 
 	let expanded = true;
 	let editMode = false;
@@ -60,7 +60,7 @@
 			return;
 		}
 		editMode = false;
-		onRefresh();
+		await onRefresh();
 	}
 
 	function startAdd() {
@@ -87,7 +87,7 @@
 			return;
 		}
 		addMode = false;
-		onRefresh();
+		await onRefresh();
 	}
 
 	async function handleDelete() {
@@ -100,7 +100,7 @@
 			nodeError = 'Failed to delete category.';
 			return;
 		}
-		onRefresh();
+		await onRefresh();
 	}
 
 	$: hasChildren = node.children && node.children.length > 0;
