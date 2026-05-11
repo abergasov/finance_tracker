@@ -40,12 +40,6 @@
 		saveSession(session);
 		loading = false;
 	});
-
-	function signOut() {
-		clearSession();
-		session = null;
-		error = "";
-	}
 </script>
 
 <svelte:head>
@@ -67,8 +61,6 @@
 			{#if session.user.locale}
 				<p>Locale: {session.user.locale}</p>
 			{/if}
-			<a class="button account-link" href="/account">Manage categories</a>
-			<button on:click={signOut}>Sign out</button>
 		</div>
 	</div>
 {:else}
@@ -120,8 +112,7 @@
 		margin: 0 0 1rem;
 	}
 
-	.button,
-	button {
+	.button {
 		display: inline-flex;
 		justify-content: center;
 		align-items: center;
@@ -133,10 +124,6 @@
 		font: inherit;
 		text-decoration: none;
 		cursor: pointer;
-	}
-
-	.account-link {
-		margin-bottom: 0.75rem;
 	}
 
 	.error {
