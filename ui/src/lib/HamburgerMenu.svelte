@@ -5,7 +5,6 @@
 	let open = false;
 	let isSignedIn = false;
 	let menuEl: HTMLDivElement | null = null;
-	let dropdownEl: HTMLDivElement | null = null;
 	let firstItemEl: HTMLAnchorElement | null = null;
 	let lastItemEl: HTMLButtonElement | null = null;
 
@@ -57,23 +56,23 @@
 			case "ArrowDown":
 				e.preventDefault();
 				// Move focus to next item or wrap to first
-				if (document.activeElement === firstItemEl && lastItemEl) {
-					lastItemEl.focus();
-				} else if (document.activeElement === lastItemEl && firstItemEl) {
-					firstItemEl.focus();
+				if (document.activeElement === firstItemEl) {
+					// Move from first to last (or stay on first if no last item)
+					lastItemEl?.focus() ?? firstItemEl?.focus();
 				} else {
+					// Wrap from last back to first, or default to first
 					firstItemEl?.focus();
 				}
 				break;
 			case "ArrowUp":
 				e.preventDefault();
 				// Move focus to previous item or wrap to last
-				if (document.activeElement === lastItemEl && firstItemEl) {
-					firstItemEl.focus();
-				} else if (document.activeElement === firstItemEl && lastItemEl) {
-					lastItemEl.focus();
+				if (document.activeElement === lastItemEl) {
+					// Move from last to first
+					firstItemEl?.focus();
 				} else {
-					lastItemEl?.focus();
+					// Wrap from first back to last, or default to last
+					lastItemEl?.focus() ?? firstItemEl?.focus();
 				}
 				break;
 		}
@@ -97,7 +96,7 @@
 	</button>
 
 	{#if open}
-		<div class="dropdown" id="nav-dropdown" bind:this={dropdownEl} role="menu">
+		<div class="dropdown" id="nav-dropdown" role="menu">
 			<a 
 				class="menu-item" 
 				href="/account" 
