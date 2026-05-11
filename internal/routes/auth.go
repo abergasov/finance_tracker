@@ -1,7 +1,9 @@
 package routes
 
 import (
+	"encoding/json"
 	"errors"
+	"finance_tracker/internal/entities"
 	"finance_tracker/internal/utils"
 	"net/http"
 	"strings"
@@ -80,6 +82,30 @@ func (s *Router) handleCurrentUser(ctx fiber.Ctx, _ uuid.UUID) error {
 func (s *Router) redirectOrRespondAuthFailure(ctx fiber.Ctx, err error, statusCode int) error {
 	s.clearOAuthStateCookie(ctx)
 	return ctx.Status(statusCode).JSON(fiber.Map{"error": err.Error()})
+}
+
+type updateCurrencyRequest struct {
+	Currency string `json:"currency"`
+}
+
+// handleUpdateUserCurrency handles PUT /api/v1/me/currency.
+// Validates that the requested currency is known, then persists it.
+func (s *Router) handleUpdateUserCurrency(ctx fiber.Ctx, userID uuid.UUID) error {
+	var req updateCurrencyRequest
+	if err := json.Unmarshal(ctx.Body(), &req); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+	}
+	currency, err := entities.CurrencyFromString(req.Currency)
+	if err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "unsupported currency"})
+	}
+	if err = s.service.UpdateUserDefaultCurrency(ctx.Context(), userID, currency); err != nil {
+		if errors.Is(err, utils.ErrUserNotFound) {
+			return ctx.Status(http.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+		}
+		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+	}
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{"ok": true})
 }
 
 func (s *Router) clearOAuthStateCookie(ctx fiber.Ctx) {
