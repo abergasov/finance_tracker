@@ -1,18 +1,19 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import {
-		buildGoogleLoginURL,
 		clearSession,
 		fetchCurrentUser,
 		loadSession,
 		saveSession,
 		type AuthSession,
+		type UserExpenses,
 	} from "$lib/auth";
+	import CategoryNode from "$lib/CategoryNode.svelte";
 
 	let loading = true;
 	let session: AuthSession | null = null;
+	let categories: UserExpenses | null = null;
 	let error = "";
-	const googleLoginURL = buildGoogleLoginURL();
 
 	onMount(async () => {
 		const storedSession = loadSession();
@@ -33,19 +34,22 @@
 			token: storedSession.token,
 			user: result.user,
 		};
+		categories = result.categories;
 		saveSession(session);
 		loading = false;
 	});
 
-	function signOut() {
-		clearSession();
-		session = null;
-		error = "";
+	async function refreshCategories() {
+		if (!session) return;
+		const result = await fetchCurrentUser(session.token);
+		if (result) {
+			categories = result.categories;
+		}
 	}
 </script>
 
 <svelte:head>
-	<title>Finance Tracker</title>
+	<title>Account – Finance Tracker</title>
 </svelte:head>
 
 {#if loading}
@@ -57,23 +61,43 @@
 {:else if session}
 	<div class="shell">
 		<div class="card">
-			<p class="eyebrow">Authenticated home</p>
-			<h1>Welcome, {session.user.name || session.user.email}</h1>
-			<p>{session.user.email}</p>
-			{#if session.user.locale}
-				<p>Locale: {session.user.locale}</p>
+			<p class="eyebrow">Account</p>
+			<h1>Expense categories</h1>
+			<a class="back-link" href="/">← Back to home</a>
+		</div>
+
+		<div class="card categories-card">
+			{#if !categories || (!categories.mandatoryExpenses?.id && !categories.optionalExpenses?.id)}
+				<p class="muted">No categories yet.</p>
+			{:else}
+				<div class="tree">
+					{#if categories.mandatoryExpenses?.id}
+						<CategoryNode
+							node={categories.mandatoryExpenses}
+							isRoot={true}
+							token={session.token}
+							onRefresh={refreshCategories}
+						/>
+					{/if}
+					{#if categories.optionalExpenses?.id}
+						<CategoryNode
+							node={categories.optionalExpenses}
+							isRoot={true}
+							token={session.token}
+							onRefresh={refreshCategories}
+						/>
+					{/if}
+				</div>
 			{/if}
-			<a class="button account-link" href="/account">Manage categories</a>
-			<button on:click={signOut}>Sign out</button>
 		</div>
 	</div>
 {:else}
 	<div class="shell">
 		<div class="card">
-			<p class="eyebrow">Finance Tracker</p>
-			<h1>Sign in</h1>
-			<p>Continue with Google to reach the app home page.</p>
-			<a class="button" href={googleLoginURL}>Continue with Google</a>
+			<p class="eyebrow">Account</p>
+			<h1>Not signed in</h1>
+			<p>Please sign in to manage your categories.</p>
+			<a class="button" href="/">← Back to home</a>
 			{#if error}
 				<p class="error">{error}</p>
 			{/if}
@@ -99,6 +123,10 @@
 		box-shadow: 0 20px 45px var(--shadow-card);
 	}
 
+	.categories-card {
+		padding: 1rem 1.5rem;
+	}
+
 	.eyebrow {
 		margin: 0 0 0.5rem;
 		text-transform: uppercase;
@@ -116,8 +144,28 @@
 		margin: 0 0 1rem;
 	}
 
-	.button,
-	button {
+	.muted {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		margin: 0.5rem 0 0;
+	}
+
+	.tree {
+		padding: 0.5rem 0 0;
+	}
+
+	.back-link {
+		display: inline-block;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+		text-decoration: none;
+	}
+
+	.back-link:hover {
+		color: var(--text-primary);
+	}
+
+	.button {
 		display: inline-flex;
 		justify-content: center;
 		align-items: center;
@@ -129,10 +177,6 @@
 		font: inherit;
 		text-decoration: none;
 		cursor: pointer;
-	}
-
-	.account-link {
-		margin-bottom: 0.75rem;
 	}
 
 	.error {
