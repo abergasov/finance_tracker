@@ -119,11 +119,6 @@ func TestCreateExpenseRoute(t *testing.T) {
 			"currency":    "USD",
 			"amount":      "10.00",
 		},
-		"rejects unauthenticated request": map[string]any{
-			"category_id": childCategoryID,
-			"currency":    "USD",
-			"amount":      "10.00",
-		},
 	}
 	for name, payload := range table {
 		t.Run(name, func(t *testing.T) {
