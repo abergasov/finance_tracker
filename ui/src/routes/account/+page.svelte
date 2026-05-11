@@ -39,11 +39,16 @@
 		loading = false;
 	});
 
-	async function refreshCategories() {
+	async function refreshCategories(): Promise<void> {
 		if (!session) return;
-		const result = await fetchCurrentUser(session.token);
-		if (result) {
-			categories = result.categories;
+
+		try {
+			const result = await fetchCurrentUser(session.token);
+			if (result) {
+				categories = result.categories;
+			}
+		} catch {
+			error = "Unable to refresh categories right now. Please try again.";
 		}
 	}
 </script>
