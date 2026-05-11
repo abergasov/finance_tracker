@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 
@@ -24,6 +25,9 @@ var ErrRootCategory = errors.New("category must not be a root category")
 // Validation:
 //   - categoryID must identify a category owned by userID
 //   - that category must not be a root category (parent_id must not be NULL)
+//
+// The currency amount is converted to USD minor units via the currency service
+// and stored alongside the original currency/amount.
 func (s *Service) CreateExpenseRecord(ctx context.Context, userID uuid.UUID, categoryID int64, currency entities.Currency, amountMinor int64) error {
 	category, err := s.repo.LoadUserExpense(ctx, userID, categoryID)
 	if err != nil || category == nil {
@@ -33,7 +37,15 @@ func (s *Service) CreateExpenseRecord(ctx context.Context, userID uuid.UUID, cat
 		return ErrRootCategory
 	}
 
-	if err = s.repo.SaveExpenseRecord(ctx, userID, categoryID, currency.String(), amountMinor); err != nil {
+	amountMinorUSD := amountMinor
+	if currency != entities.CurrencyUSD {
+		amountMinorUSD, err = s.currencySvc.ConvertToUSD(ctx, currency, amountMinor)
+		if err != nil {
+			return fmt.Errorf("convert to USD: %w", err)
+		}
+	}
+
+	if err = s.repo.SaveExpenseRecord(ctx, userID, categoryID, currency.String(), amountMinor, amountMinorUSD); err != nil {
 		s.log.Error("failed to save expense record", err,
 			logger.WithUserID(userID),
 			logger.WithInt64("category_id", categoryID),

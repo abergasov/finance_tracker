@@ -50,7 +50,7 @@ func GetClean(t *testing.T) *TestContainer {
 
 	// service init
 	srvCurrency := currency.NewService(ctx, appLog, conf, repo)
-	serviceSampler := user.InitService(ctx, appLog, repo, conf)
+	serviceSampler := user.InitService(ctx, appLog, repo, conf, srvCurrency)
 	return &TestContainer{
 		Ctx:             ctx,
 		Cfg:             conf,

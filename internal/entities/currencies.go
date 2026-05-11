@@ -385,6 +385,7 @@ func CurrencyFromString(s string) (Currency, error) {
 
 type CurrencyRate struct {
 	RateAgainstUSD map[Currency]int64
+	Scale          int64
 }
 
 type CurrencyDB struct {

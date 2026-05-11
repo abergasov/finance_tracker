@@ -6,6 +6,7 @@ import (
 	"finance_tracker/internal/logger"
 	"finance_tracker/internal/repository"
 	"finance_tracker/internal/routes"
+	"finance_tracker/internal/service/currency"
 	"finance_tracker/internal/service/user"
 	"finance_tracker/internal/storage/database"
 	"flag"
@@ -45,7 +46,9 @@ func main() {
 	repo := repository.InitRepo(dbConn)
 
 	appLog.Info("init services")
-	service := user.InitService(ctx, appLog, repo, appConf)
+	svcCurrency := currency.NewService(ctx, appLog, appConf, repo)
+	svcCurrency.Run()
+	service := user.InitService(ctx, appLog, repo, appConf, svcCurrency)
 
 	appLog.Info("init http service")
 	appHTTPServer := routes.InitAppRouter(appLog, service, fmt.Sprintf(":%d", appConf.AppPort), true)

@@ -5,6 +5,7 @@ import (
 	"finance_tracker/internal/config"
 	"finance_tracker/internal/logger"
 	"finance_tracker/internal/repository"
+	"finance_tracker/internal/service/currency"
 	"finance_tracker/internal/utils"
 
 	"golang.org/x/oauth2"
@@ -12,21 +13,23 @@ import (
 )
 
 type Service struct {
-	ctx   context.Context
-	log   logger.AppLogger
-	repo  *repository.Repo
-	cfg   *config.AppConfig
-	oauth *oauth2.Config
+	ctx         context.Context
+	log         logger.AppLogger
+	repo        *repository.Repo
+	cfg         *config.AppConfig
+	oauth       *oauth2.Config
+	currencySvc *currency.Service
 }
 
-func InitService(ctx context.Context, log logger.AppLogger, repo *repository.Repo, cfg *config.AppConfig) *Service {
+func InitService(ctx context.Context, log logger.AppLogger, repo *repository.Repo, cfg *config.AppConfig, currencySvc *currency.Service) *Service {
 	utils.SetSignedKey(cfg.Auth.Token.SigningKey)
 	return &Service{
-		ctx:   ctx,
-		repo:  repo,
-		log:   log.With(logger.WithService("sampler")),
-		cfg:   cfg,
-		oauth: googleOAuthConfig(cfg),
+		ctx:         ctx,
+		repo:        repo,
+		log:         log.With(logger.WithService("sampler")),
+		cfg:         cfg,
+		oauth:       googleOAuthConfig(cfg),
+		currencySvc: currencySvc,
 	}
 }
 

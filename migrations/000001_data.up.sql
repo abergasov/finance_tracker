@@ -39,12 +39,13 @@ CREATE UNIQUE INDEX category_expenses_user_root_uidx ON category_expenses (user_
 
 CREATE TABLE expense_records
 (
-    id           BIGSERIAL PRIMARY KEY,
-    user_id      UUID        NOT NULL,
-    category_id  BIGINT      NOT NULL REFERENCES category_expenses (id) ON DELETE RESTRICT,
-    currency     VARCHAR     NOT NULL,
-    amount_minor BIGINT      NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+    id               BIGSERIAL PRIMARY KEY,
+    user_id          UUID        NOT NULL,
+    category_id      BIGINT      NOT NULL REFERENCES category_expenses (id) ON DELETE RESTRICT,
+    currency         VARCHAR     NOT NULL,
+    amount_minor     BIGINT      NOT NULL,
+    amount_minor_usd BIGINT      NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX expense_records_user_id_idx ON expense_records (user_id);
