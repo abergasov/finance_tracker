@@ -63,14 +63,21 @@ export type CurrentUserResult = {
 	categories: UserExpenses | null;
 };
 
-export async function fetchCurrentUser(token: string): Promise<CurrentUserResult | null> {
+export type FetchCurrentUserError = "auth" | "network";
+
+export type FetchCurrentUserOutcome =
+	| { ok: true; data: CurrentUserResult }
+	| { ok: false; errorKind: FetchCurrentUserError };
+
+export async function fetchCurrentUser(token: string): Promise<FetchCurrentUserOutcome> {
 	const response = await fetch(buildBackendURL("/api/v1/me"), {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
 	});
 	if (!response.ok) {
-		return null;
+		const isAuthError = response.status === 401 || response.status === 403;
+		return { ok: false, errorKind: isAuthError ? "auth" : "network" };
 	}
 
 	const data = (await response.json()) as {
@@ -78,8 +85,11 @@ export async function fetchCurrentUser(token: string): Promise<CurrentUserResult
 		user_expenses_categories: UserExpenses | null;
 	};
 	return {
-		user: data.user,
-		categories: data.user_expenses_categories ?? null,
+		ok: true,
+		data: {
+			user: data.user,
+			categories: data.user_expenses_categories ?? null,
+		},
 	};
 }
 
