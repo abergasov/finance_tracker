@@ -137,7 +137,7 @@
 			<button class="action-btn save" aria-label="Save category name" on:click={submitEdit} disabled={busy}>✓</button>
 			<button class="action-btn cancel" aria-label="Cancel category rename" on:click={cancelEdit} disabled={busy}>✕</button>
 		{:else}
-			<span class="color-swatch" style={`background-color: ${node.color}`}></span>
+			<span class="color-swatch" aria-hidden="true" style={`background-color: ${node.color}`}></span>
 			<span class="node-name" class:root-name={isRoot}>{node.name}</span>
 			<div class="actions">
 				<button class="action-btn add" title="Add subcategory" aria-label="Add subcategory" on:click={startAdd} disabled={busy}>
