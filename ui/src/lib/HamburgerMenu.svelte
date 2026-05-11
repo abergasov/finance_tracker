@@ -1,16 +1,17 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import { clearSession, loadSession } from "$lib/auth";
 
 	let open = false;
 	let isSignedIn = false;
 	let menuEl: HTMLDivElement | null = null;
+	let hamburgerBtn: HTMLButtonElement | null = null;
 
 	onMount(() => {
 		isSignedIn = loadSession() !== null;
 	});
 
-	function toggleMenu() {
+	async function toggleMenu() {
 		// Re-check auth state each time the menu is opened so it stays consistent
 		// even if a page-level signout was performed before the menu was used.
 		isSignedIn = loadSession() !== null;
@@ -18,10 +19,9 @@
 		
 		// Focus first menu item when opening
 		if (open) {
-			setTimeout(() => {
-				const firstItem = menuEl?.querySelector<HTMLElement>('[role="menuitem"]');
-				firstItem?.focus();
-			}, 0);
+			await tick(); // Wait for DOM update
+			const firstItem = menuEl?.querySelector<HTMLElement>('[role="menuitem"]');
+			firstItem?.focus();
 		}
 	}
 
@@ -50,7 +50,7 @@
 				e.preventDefault();
 				open = false;
 				// Return focus to the hamburger button
-				menuEl?.querySelector<HTMLButtonElement>(".hamburger-btn")?.focus();
+				hamburgerBtn?.focus();
 				break;
 			case "ArrowDown":
 			case "ArrowUp":
@@ -64,6 +64,7 @@
 				
 				if (e.key === "ArrowDown") {
 					// Move to next item, or wrap to first
+					// currentIndex < 0 handles the case when focus is outside the menu (defensive check)
 					nextIndex = currentIndex < 0 || currentIndex >= menuItems.length - 1 ? 0 : currentIndex + 1;
 				} else {
 					// Move to previous item, or wrap to last
@@ -86,6 +87,7 @@
 		aria-expanded={open}
 		aria-haspopup="true"
 		aria-controls="nav-dropdown"
+		bind:this={hamburgerBtn}
 	>
 		<span class="bar"></span>
 		<span class="bar"></span>
