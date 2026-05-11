@@ -19,6 +19,15 @@
 	let busy = false;
 	let nodeError = '';
 
+	function isHexColor(value: string): boolean {
+		return /^#[0-9a-fA-F]{6}$/.test(value);
+	}
+
+	function isEmptyOrHexColor(value: string): boolean {
+		const normalizedValue = value.trim();
+		return normalizedValue === '' || isHexColor(normalizedValue);
+	}
+
 	function startEdit() {
 		editName = node.name;
 		editColor = node.color ?? '';
@@ -34,6 +43,10 @@
 
 	async function submitEdit() {
 		if (!editName.trim()) return;
+		if (!isEmptyOrHexColor(editColor)) {
+			nodeError = 'Color must be in #RRGGBB format.';
+			return;
+		}
 		busy = true;
 		nodeError = '';
 		const ok = await updateCategory(token, node.id, editName.trim(), editColor.trim());
@@ -87,6 +100,7 @@
 	}
 
 	$: hasChildren = node.children && node.children.length > 0;
+	$: isEditColorValid = isEmptyOrHexColor(editColor);
 </script>
 
 <div class="node" class:root={isRoot}>
@@ -119,8 +133,13 @@
 				aria-label="Category color"
 				placeholder="#0f0f0f"
 				bind:value={editColor}
+				pattern="^#[0-9a-fA-F]{6}$"
+				maxlength="7"
 				on:input={(e) => {
-					editPickerColor = (e.currentTarget as HTMLInputElement).value;
+					const value = (e.currentTarget as HTMLInputElement).value.trim();
+					if (isHexColor(value)) {
+						editPickerColor = value;
+					}
 				}}
 				disabled={busy}
 			/>
@@ -134,7 +153,7 @@
 				}}
 				disabled={busy}
 			/>
-			<button class="action-btn save" aria-label="Save category name" on:click={submitEdit} disabled={busy}>✓</button>
+			<button class="action-btn save" aria-label="Save category name" on:click={submitEdit} disabled={busy || !isEditColorValid}>✓</button>
 			<button class="action-btn cancel" aria-label="Cancel category rename" on:click={cancelEdit} disabled={busy}>✕</button>
 		{:else}
 			<span class="color-swatch" aria-hidden="true" style={`background-color: ${node.color}`}></span>
