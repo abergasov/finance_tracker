@@ -41,16 +41,31 @@
 	let dialogEl: HTMLDivElement | null = null;
 	let previouslyFocusedEl: HTMLElement | null = null;
 	let wasOpen = false;
+	let pointerDownOutsideDialog = false;
+
+	function getDeepActiveElement(): HTMLElement | null {
+		let activeElement = document.activeElement as HTMLElement | null;
+		while (
+			activeElement &&
+			'shadowRoot' in activeElement &&
+			activeElement.shadowRoot?.activeElement instanceof HTMLElement
+		) {
+			activeElement = activeElement.shadowRoot.activeElement;
+		}
+		return activeElement instanceof HTMLElement ? activeElement : null;
+	}
 
 	async function focusDialog() {
 		await tick();
-		const firstFocusable = dialogEl?.querySelector<HTMLElement>('select, input, button');
+		const firstFocusable = dialogEl?.querySelector<HTMLElement>(
+			'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
 		(firstFocusable ?? dialogEl)?.focus();
 	}
 
 	$: if (open && !wasOpen) {
 		wasOpen = true;
-		previouslyFocusedEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		previouslyFocusedEl = getDeepActiveElement();
 
 		// Reset form each time the modal opens.
 		selectedCategoryId = flatCategories.length > 0 ? flatCategories[0].id : 0;
@@ -63,7 +78,14 @@
 
 	$: if (!open && wasOpen) {
 		wasOpen = false;
-		previouslyFocusedEl?.focus();
+		pointerDownOutsideDialog = false;
+		if (previouslyFocusedEl?.isConnected) {
+			try {
+				previouslyFocusedEl.focus();
+			} catch {
+				// Ignore focus errors if the previous element became unfocusable.
+			}
+		}
 		previouslyFocusedEl = null;
 	}
 
@@ -98,7 +120,14 @@
 
 	function handleWindowPointerDown(e: PointerEvent) {
 		if (!open || dialogEl === null) return;
-		if (!dialogEl.contains(e.target as Node)) onClose();
+		pointerDownOutsideDialog = !dialogEl.contains(e.target as Node);
+	}
+
+	function handleWindowPointerUp(e: PointerEvent) {
+		if (!open || dialogEl === null) return;
+		const pointerUpOutsideDialog = !dialogEl.contains(e.target as Node);
+		if (pointerDownOutsideDialog && pointerUpOutsideDialog) onClose();
+		pointerDownOutsideDialog = false;
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -107,7 +136,11 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKeydown} on:pointerdown={handleWindowPointerDown} />
+<svelte:window
+	on:keydown={handleKeydown}
+	on:pointerdown={handleWindowPointerDown}
+	on:pointerup={handleWindowPointerUp}
+/>
 
 {#if open}
 	<div class="backdrop">
