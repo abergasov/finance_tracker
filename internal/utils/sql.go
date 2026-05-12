@@ -153,3 +153,10 @@ func QueryRowPrimitive[T any](ctx context.Context, conn Querier, query string, p
 	err := conn.QueryRowContext(ctx, query, params...).Scan(&t)
 	return t, err
 }
+
+func NoRowsInResultSet(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "no rows in result set")
+}

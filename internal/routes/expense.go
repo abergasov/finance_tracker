@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"finance_tracker/internal/entities"
+	currencyservice "finance_tracker/internal/service/currency"
 	userservice "finance_tracker/internal/service/user"
 )
 
@@ -46,6 +47,9 @@ func (s *Router) handleCreateExpense(ctx fiber.Ctx, userID uuid.UUID) error {
 	}
 
 	if err = s.service.CreateExpenseRecord(ctx.Context(), userID, req.CategoryID, currency, amountMinor); err != nil {
+		if errors.Is(err, currencyservice.ErrAmountTooLarge) {
+			return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": currencyservice.ErrAmountTooLarge.Error()})
+		}
 		if errors.Is(err, userservice.ErrInvalidCategory) || errors.Is(err, userservice.ErrRootCategory) {
 			return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 		}

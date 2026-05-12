@@ -67,9 +67,11 @@ func (s *Service) getExchangeUSDRate(ctx context.Context, token string, date tim
 			continue
 		}
 
-		// Store rate as fixed-point integer scaled by 100 (e.g., 1.235 -> 124).
-		result.RateAgainstUSD[c] = int64(math.Round(rate * 100))
+		// Store rate as fixed-point integer scaled by RateScale to preserve
+		// very small currency/USD ratios without rounding to zero.
+		result.RateAgainstUSD[c] = int64(math.Round(rate * float64(RateScale)))
 	}
+	result.Scale = RateScale
 
 	return result, nil
 }

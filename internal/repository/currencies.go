@@ -29,6 +29,17 @@ func (r *Repo) LoadAllCurrencies(ctx context.Context) ([]*entities.CurrencyDB, e
 	return utils.QueryRowsToStruct[entities.CurrencyDB](ctx, r.db.Client(), q)
 }
 
+// LoadLatestCurrencyRates returns the most recently stored currency rate row for today,
+// or nil if no rates have been persisted yet.
+func (r *Repo) LoadLatestCurrencyRates(ctx context.Context) (*entities.CurrencyDB, error) {
+	q := fmt.Sprintf("SELECT %s FROM %s WHERE timestamp_num = %d", tableCurrenciesColsStr, TableCurrencies, utils.TimeToDayIntNum(time.Now()))
+	curr, err := utils.QueryRowToStruct[entities.CurrencyDB](ctx, r.db.Client(), q)
+	if utils.NoRowsInResultSet(err) {
+		return nil, nil
+	}
+	return curr, err
+}
+
 func (r *Repo) SaveCurrencyRates(ctx context.Context, rates map[entities.Currency]int64, rateFor time.Time) error {
 	ratesJSON, err := json.Marshal(rates)
 	if err != nil {
